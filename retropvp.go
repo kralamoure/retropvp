@@ -1,4 +1,5 @@
-package d1game
+// Package retropvp implements a PVP game server for Dofus Retro.
+package retropvp
 
 import (
 	"errors"
@@ -6,11 +7,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/happybydefault/logger"
-	"github.com/kralamoure/d1/d1svc"
-	prototyp "github.com/kralamoure/d1proto/typ"
-	"github.com/kralamoure/d1util"
+	"github.com/happybydefault/logging"
 	"github.com/kralamoure/dofus/dofussvc"
+	"github.com/kralamoure/retro/retrosvc"
+	prototyp "github.com/kralamoure/retroproto/typ"
+	"github.com/kralamoure/retroutil"
 )
 
 type Config struct {
@@ -20,8 +21,8 @@ type Config struct {
 	TicketDur   time.Duration
 	Location    *time.Location
 	Dofus       *dofussvc.Service
-	D1          *d1svc.Service
-	Logger      logger.Logger
+	Retro       *retrosvc.Service
+	Logger      logging.Logger
 }
 
 func NewServer(c Config) (*Server, error) {
@@ -40,11 +41,11 @@ func NewServer(c Config) (*Server, error) {
 	if c.Dofus == nil {
 		return nil, errors.New("nil dofus service")
 	}
-	if c.D1 == nil {
-		return nil, errors.New("nil d1 service")
+	if c.Retro == nil {
+		return nil, errors.New("nil retro service")
 	}
 	if c.Logger == nil {
-		c.Logger = logger.Noop{}
+		c.Logger = logging.Noop{}
 	}
 
 	addr, err := net.ResolveTCPAddr("tcp4", c.Addr)
@@ -59,7 +60,7 @@ func NewServer(c Config) (*Server, error) {
 		ticketDur:            c.TicketDur,
 		location:             c.Location,
 		dofus:                c.Dofus,
-		d1:                   c.D1,
+		retro:                c.Retro,
 		sessions:             make(map[*session]struct{}),
 		sessionByAccountId:   make(map[string]*session),
 		sessionByCharacterId: make(map[int]*session),
@@ -67,7 +68,7 @@ func NewServer(c Config) (*Server, error) {
 	return s, nil
 }
 
-func validatedPath(original []prototyp.CommonDirAndCell, startingCellId int, gameMapWidth int, cells []d1util.Cell) ([]prototyp.CommonDirAndCell, error) {
+func validatedPath(original []prototyp.CommonDirAndCell, startingCellId int, gameMapWidth int, cells []retroutil.Cell) ([]prototyp.CommonDirAndCell, error) {
 	if len(original) > 10 {
 		return nil, errors.New("path is too long")
 	}
@@ -82,7 +83,7 @@ func validatedPath(original []prototyp.CommonDirAndCell, startingCellId int, gam
 	cellIds := make(map[int]struct{})
 	cellIds[current.Id] = struct{}{}
 	for _, v := range original {
-		ix, err := d1util.DirectionToIndex(v.DirId)
+		ix, err := retroutil.DirectionToIndex(v.DirId)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +98,7 @@ func validatedPath(original []prototyp.CommonDirAndCell, startingCellId int, gam
 				return nil, errors.New("path is too long")
 			}
 
-			nextId, ok := d1util.AroundCellNum(current.Id, 0, ix, gameMapWidth, cells)
+			nextId, ok := retroutil.AroundCellNum(current.Id, 0, ix, gameMapWidth, cells)
 			if !ok {
 				return nil, errors.New("invalid next cell")
 			}

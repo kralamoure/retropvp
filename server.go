@@ -1,4 +1,4 @@
-package d1game
+package retropvp
 
 import (
 	"context"
@@ -11,25 +11,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/happybydefault/logger"
-	"github.com/kralamoure/d1"
-	"github.com/kralamoure/d1/d1svc"
-	"github.com/kralamoure/d1/d1typ"
-	"github.com/kralamoure/d1proto/msgsvr"
-	prototyp "github.com/kralamoure/d1proto/typ"
-	"github.com/kralamoure/d1util"
+	"github.com/happybydefault/logging"
 	"github.com/kralamoure/dofus/dofussvc"
+	"github.com/kralamoure/retro"
+	"github.com/kralamoure/retro/retrosvc"
+	"github.com/kralamoure/retro/retrotyp"
+	"github.com/kralamoure/retroproto/msgsvr"
+	prototyp "github.com/kralamoure/retroproto/typ"
+	"github.com/kralamoure/retroutil"
 )
 
 type Server struct {
-	logger      logger.Logger
+	logger      logging.Logger
 	id          int
 	addr        *net.TCPAddr
 	connTimeout time.Duration
 	ticketDur   time.Duration
 	location    *time.Location
 	dofus       *dofussvc.Service
-	d1          *d1svc.Service
+	retro       *retrosvc.Service
 
 	ln *net.TCPListener
 
@@ -44,42 +44,42 @@ type Server struct {
 type cache struct {
 	static cacheStatic
 
-	npcsByMapId           map[int][]d1.NPC
-	markets               map[string]d1.Market
-	marketItemsByMarketId map[string]map[int]d1.MarketItem
-	gameMapCells          map[int][]d1util.Cell
+	npcsByMapId           map[int][]retro.NPC
+	markets               map[string]retro.Market
+	marketItemsByMarketId map[string]map[int]retro.MarketItem
+	gameMapCells          map[int][]retroutil.Cell
 }
 
 type cacheStatic struct {
-	gameMaps     map[int]d1.GameMap
-	effects      map[int]d1.EffectTemplate
-	itemSets     map[int]d1.ItemSet
-	items        map[int]d1.ItemTemplate
-	npcs         map[int]d1.NPCTemplate
-	npcDialogs   map[int]d1.NPCDialog
-	npcResponses map[int]d1.NPCResponse
-	classes      map[d1typ.ClassId]d1.Class
-	spells       map[int]d1.Spell
-	mounts       map[int]d1.MountTemplate
+	gameMaps     map[int]retro.GameMap
+	effects      map[int]retro.EffectTemplate
+	itemSets     map[int]retro.ItemSet
+	items        map[int]retro.ItemTemplate
+	npcs         map[int]retro.NPCTemplate
+	npcDialogs   map[int]retro.NPCDialog
+	npcResponses map[int]retro.NPCResponse
+	classes      map[retrotyp.ClassId]retro.Class
+	spells       map[int]retro.Spell
+	mounts       map[int]retro.MountTemplate
 }
 
 func (s *Server) ListenAndServe(ctx context.Context) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	gameServer, err := s.d1.GameServer(ctx, s.id)
+	gameServer, err := s.retro.GameServer(ctx, s.id)
 	if err != nil {
 		return err
 	}
 	s.id = gameServer.Id
 
-	err = s.d1.SetGameServerState(ctx, d1typ.GameServerStateOffline)
+	err = s.retro.SetGameServerState(ctx, retrotyp.GameServerStateOffline)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-		err := s.d1.SetGameServerState(ctx, d1typ.GameServerStateOffline)
+		err := s.retro.SetGameServerState(ctx, retrotyp.GameServerStateOffline)
 		if err != nil {
 			s.logger.Error(fmt.Errorf("could not set game server state to offline: %w", err))
 		}
@@ -106,7 +106,7 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
 	)
 	s.ln = ln
 
-	err = s.d1.SetGameServerState(ctx, d1typ.GameServerStateOnline)
+	err = s.retro.SetGameServerState(ctx, retrotyp.GameServerStateOnline)
 	if err != nil {
 		return err
 	}
@@ -185,14 +185,14 @@ func (s *Server) deleteInvalidMounts(ctx context.Context) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	mounts, err := s.d1.Mounts(ctx)
+	mounts, err := s.retro.Mounts(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, v := range mounts {
 		if !v.Validity.IsZero() && v.Validity.Before(time.Now()) {
-			err := s.d1.DeleteMount(ctx, v.Id)
+			err := s.retro.DeleteMount(ctx, v.Id)
 			if err != nil {
 				return err
 			}
@@ -300,92 +300,92 @@ func (s *Server) handleClientConn(ctx context.Context, conn *net.TCPConn) error 
 }
 
 func (s *Server) loadCache(ctx context.Context) error {
-	s.cache.gameMapCells = make(map[int][]d1util.Cell)
+	s.cache.gameMapCells = make(map[int][]retroutil.Cell)
 
-	gameMaps, err := s.d1.GameMaps(ctx)
+	gameMaps, err := s.retro.GameMaps(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.gameMaps = gameMaps
 
-	effectTemplates, err := s.d1.EffectTemplates(ctx)
+	effectTemplates, err := s.retro.EffectTemplates(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.effects = effectTemplates
 
-	itemSetTemplates, err := s.d1.ItemSets(ctx)
+	itemSetTemplates, err := s.retro.ItemSets(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.itemSets = itemSetTemplates
 
-	itemTemplates, err := s.d1.ItemTemplates(ctx)
+	itemTemplates, err := s.retro.ItemTemplates(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.items = itemTemplates
 
-	npcTemplates, err := s.d1.NPCTemplates(ctx)
+	npcTemplates, err := s.retro.NPCTemplates(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.npcs = npcTemplates
 
-	npcDialogs, err := s.d1.NPCDialogs(ctx)
+	npcDialogs, err := s.retro.NPCDialogs(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.npcDialogs = npcDialogs
 
-	npcResponse, err := s.d1.NPCResponses(ctx)
+	npcResponse, err := s.retro.NPCResponses(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.npcResponses = npcResponse
 
-	markets, err := s.d1.Markets(ctx)
+	markets, err := s.retro.Markets(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.markets = markets
 
-	s.cache.marketItemsByMarketId = make(map[string]map[int]d1.MarketItem, len(s.cache.markets))
+	s.cache.marketItemsByMarketId = make(map[string]map[int]retro.MarketItem, len(s.cache.markets))
 	for id := range markets {
-		marketItems, err := s.d1.MarketItemsByMarketId(ctx, id)
+		marketItems, err := s.retro.MarketItemsByMarketId(ctx, id)
 		if err != nil {
 			return err
 		}
 		s.cache.marketItemsByMarketId[id] = marketItems
 	}
 
-	npcs, err := s.d1.NPCs(ctx)
+	npcs, err := s.retro.NPCs(ctx)
 	if err != nil {
 		return err
 	}
 
-	s.cache.npcsByMapId = make(map[int][]d1.NPC)
+	s.cache.npcsByMapId = make(map[int][]retro.NPC)
 	for _, v := range npcs {
 		if s.cache.npcsByMapId[v.MapId] == nil {
-			s.cache.npcsByMapId[v.MapId] = []d1.NPC{v}
+			s.cache.npcsByMapId[v.MapId] = []retro.NPC{v}
 		} else {
 			s.cache.npcsByMapId[v.MapId] = append(s.cache.npcsByMapId[v.MapId], v)
 		}
 	}
 
-	classes, err := s.d1.Classes(ctx)
+	classes, err := s.retro.Classes(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.classes = classes
 
-	spells, err := s.d1.Spells(ctx)
+	spells, err := s.retro.Spells(ctx)
 	if err != nil {
 		return err
 	}
 	s.cache.static.spells = spells
 
-	mountTemplates, err := s.d1.MountTemplates(ctx)
+	mountTemplates, err := s.retro.MountTemplates(ctx)
 	if err != nil {
 		return err
 	}
@@ -407,13 +407,13 @@ func (s *Server) trackSession(sess *session, add bool) {
 	}
 }
 
-func (s *Server) gameMovementSpriteCharacter(ctx context.Context, char d1.Character, transition bool) (sprite msgsvr.GameMovementSprite, err error) {
+func (s *Server) gameMovementSpriteCharacter(ctx context.Context, char retro.Character, transition bool) (sprite msgsvr.GameMovementSprite, err error) {
 	gfxId, err := strconv.Atoi(fmt.Sprintf("%d%d", char.ClassId, char.Sex))
 	if err != nil {
 		return
 	}
 
-	items, err := s.d1.CharacterItemsByCharacterId(ctx, char.Id)
+	items, err := s.retro.CharacterItemsByCharacterId(ctx, char.Id)
 	if err != nil {
 		return
 	}
@@ -431,8 +431,8 @@ func (s *Server) gameMovementSpriteCharacter(ctx context.Context, char d1.Charac
 	mountCustomColor2 := ""
 	mountCustomColor3 := ""
 	if char.Mounting {
-		var mount d1.Mount
-		mount, err = s.d1.Mount(ctx, char.MountId)
+		var mount retro.Mount
+		mount, err = s.retro.Mount(ctx, char.MountId)
 		if err != nil {
 			return
 		}
@@ -441,7 +441,7 @@ func (s *Server) gameMovementSpriteCharacter(ctx context.Context, char d1.Charac
 
 		chameleon := false
 		for _, v := range mount.Capacities {
-			if v == d1typ.MountCapacityIdChameleon {
+			if v == retrotyp.MountCapacityIdChameleon {
 				chameleon = true
 				break
 			}
@@ -507,7 +507,7 @@ func (s *Server) sendMsgToMap(ctx context.Context, id int, msg msgOut) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	chars, err := s.d1.CharactersByGameMapId(ctx, id)
+	chars, err := s.retro.CharactersByGameMapId(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -528,7 +528,7 @@ func (s *Server) sendMsgToMap(ctx context.Context, id int, msg msgOut) error {
 	return nil
 }
 
-func (s *Server) commonMountData(mount d1.Mount) (data prototyp.CommonMountData, err error) {
+func (s *Server) commonMountData(mount retro.Mount) (data prototyp.CommonMountData, err error) {
 	mountTemplate, ok := s.cache.static.mounts[mount.TemplateId]
 	if !ok {
 		err = errors.New("mout template not found")

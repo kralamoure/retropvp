@@ -1,4 +1,4 @@
-package d1game
+package retropvp
 
 import (
 	crand "crypto/rand"

@@ -12,22 +12,23 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/happybydefault/logging"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/kralamoure/d1/d1svc"
-	"github.com/kralamoure/d1pg"
 	"github.com/kralamoure/dofus/dofussvc"
 	"github.com/kralamoure/dofuspg"
+	"github.com/kralamoure/retro/retrosvc"
+	"github.com/kralamoure/retropg"
 	"github.com/spf13/pflag"
 	"go.uber.org/zap"
 	"go.uber.org/zap/buffer"
 
-	"github.com/kralamoure/d1game"
+	"github.com/kralamoure/retropvp"
 )
 
 const (
-	programName        = "d1game"
-	programDescription = "d1game is a game server for Dofus 1."
-	programMoreInfo    = "https://github.com/kralamoure/d1game"
+	programName        = "retropvp"
+	programDescription = "retropvp is a game server for Dofus Retro."
+	programMoreInfo    = "https://github.com/kralamoure/retropvp"
 )
 
 var (
@@ -117,40 +118,36 @@ func run() error {
 	}
 	defer pool.Close()
 
-	dofusRepo, err := dofuspg.NewRepo(pool)
+	dofusRepo, err := dofuspg.NewDb(pool)
 	if err != nil {
 		return err
 	}
 
-	d1Repo, err := d1pg.NewRepo(pool)
+	retroRepo, err := retropg.NewDb(pool)
 	if err != nil {
 		return err
 	}
 
-	dofusSvc, err := dofussvc.NewService(dofussvc.Config{
-		Repo:   dofusRepo,
-		Logger: logger.Named("dofussvc"),
-	})
+	dofusSvc, err := dofussvc.NewService(dofusRepo)
 	if err != nil {
 		return err
 	}
 
-	d1Svc, err := d1svc.NewService(d1svc.Config{
+	retroSvc, err := retrosvc.NewService(retrosvc.Config{
 		GameServerId: serverId,
-		Repo:         d1Repo,
-		Logger:       logger.Named("d1svc"),
+		Storer:       retroRepo,
 	})
 	if err != nil {
 		return err
 	}
 
-	svr, err := d1game.NewServer(d1game.Config{
+	svr, err := retropvp.NewServer(retropvp.Config{
 		Id:          serverId,
 		Addr:        serverAddr,
 		ConnTimeout: connTimeout,
 		Dofus:       dofusSvc,
-		D1:          d1Svc,
-		Logger:      logger.Named("server"),
+		Retro:       retroSvc,
+		Logger:      logging.Named("server", logger),
 	})
 	if err != nil {
 		return err
@@ -192,7 +189,7 @@ func help(flagUsages string) string {
 }
 
 func initFlagSet() {
-	flagSet = pflag.NewFlagSet("d1game", pflag.ContinueOnError)
+	flagSet = pflag.NewFlagSet("retropvp", pflag.ContinueOnError)
 	flagSet.BoolVarP(&printHelp, "help", "h", false, "Print usage information")
 	flagSet.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	flagSet.IntVarP(&serverId, "id", "i", 0, "Server ID")

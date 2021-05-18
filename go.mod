@@ -1,4 +1,4 @@
-module github.com/kralamoure/d1game
+module github.com/kralamoure/retropvp
 
 go 1.16
 
@@ -6,14 +6,14 @@ require (
 	github.com/PaesslerAG/gval v1.1.0
 	github.com/antonmedv/expr v1.8.9
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
-	github.com/happybydefault/logger v1.1.0
+	github.com/happybydefault/logging v0.0.0-20210507180050-0f3842239c0e
 	github.com/jackc/pgx/v4 v4.11.0
-	github.com/kralamoure/d1 v0.0.0-20210325215504-184ee80d8398
-	github.com/kralamoure/d1pg v0.0.0-20210325220521-efbd35126a5c
-	github.com/kralamoure/d1proto v0.0.0-20201009010506-b246d3a2e855
-	github.com/kralamoure/d1util v0.0.0-20210427234418-7cd5ab0cb6e3
-	github.com/kralamoure/dofus v0.0.0-20200927021741-893c10151570
-	github.com/kralamoure/dofuspg v0.0.0-20200917030704-67fe21d1f864
+	github.com/kralamoure/dofus v0.0.0-20210518144341-d3028d888930
+	github.com/kralamoure/dofuspg v0.0.0-20210518145043-588c0a43fff7
+	github.com/kralamoure/retro v0.0.0-20210518143642-3f411d09afcf
+	github.com/kralamoure/retropg v0.0.0-20210518153705-47d908b59963
+	github.com/kralamoure/retroproto v0.0.0-20210518145930-3b4548159c85
+	github.com/kralamoure/retroutil v0.0.0-20210518132922-a957c67f4004
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/zippoxer/golang-petname v0.0.0-20190426180220-f3990f9184fc
@@ -25,15 +25,3 @@ require (
 	golang.org/x/tools v0.0.0-20200519015757-0d0afa43d58a // indirect
 	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
-
-replace github.com/kralamoure/dofus => ../dofus
-
-replace github.com/kralamoure/dofuspg => ../dofuspg
-
-replace github.com/kralamoure/d1 => ../d1
-
-replace github.com/kralamoure/d1pg => ../d1pg
-
-replace github.com/kralamoure/d1proto => ../d1proto
-
-replace github.com/kralamoure/d1util => ../d1util

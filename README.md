@@ -1,6 +1,6 @@
-# d1game
+# retropvp
 
-`d1game` is a game server for Dofus 1.
+`retropvp` is a game server for Dofus Retro.
 
 ## Requirements
 
@@ -10,19 +10,19 @@
 ## Build
 
 ```sh
-git clone https://github.com/kralamoure/d1game
-cd d1game
+git clone https://github.com/kralamoure/retropvp
+cd retropvp
 go build ./cmd/...
 ```
 
 ## Installation
 
 ```sh
-go get -u -v github.com/kralamoure/d1game/...
+go get -u -v github.com/kralamoure/retropvp/...
 ```
 
 ## Usage
 
 ```sh
-d1game --help
+retropvp --help
 ```

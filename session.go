@@ -1,4 +1,4 @@
-package d1game
+package retropvp
 
 import (
 	"bufio"
@@ -13,13 +13,13 @@ import (
 	"time"
 
 	"github.com/PaesslerAG/gval"
-	"github.com/kralamoure/d1"
-	"github.com/kralamoure/d1/d1typ"
-	"github.com/kralamoure/d1proto"
-	protoenum "github.com/kralamoure/d1proto/enum"
-	"github.com/kralamoure/d1proto/msgcli"
-	"github.com/kralamoure/d1proto/msgsvr"
-	prototyp "github.com/kralamoure/d1proto/typ"
+	"github.com/kralamoure/retro"
+	"github.com/kralamoure/retro/retrotyp"
+	"github.com/kralamoure/retroproto"
+	protoenum "github.com/kralamoure/retroproto/enum"
+	"github.com/kralamoure/retroproto/msgcli"
+	"github.com/kralamoure/retroproto/msgsvr"
+	prototyp "github.com/kralamoure/retroproto/typ"
 	"go.uber.org/atomic"
 	"golang.org/x/time/rate"
 )
@@ -57,11 +57,11 @@ type session struct {
 }
 
 type sessionCache struct {
-	exchangeMarket *d1.Market
+	exchangeMarket *retro.Market
 }
 
 type msgOut interface {
-	ProtocolId() (id d1proto.MsgSvrId)
+	ProtocolId() (id retroproto.MsgSvrId)
 	Serialized() (extra string, err error)
 }
 
@@ -77,7 +77,7 @@ func (s *session) receivePackets(ctx context.Context) error {
 			}
 
 			if s.characterId != 0 {
-				char, err := s.svr.d1.Character(ctx, s.characterId)
+				char, err := s.svr.retro.Character(ctx, s.characterId)
 				if err != nil {
 					return err
 				}
@@ -144,8 +144,8 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		}
 	}()
 
-	id, ok := d1proto.MsgCliIdByPkt(pkt)
-	name, _ := d1proto.MsgCliNameByID(id)
+	id, ok := retroproto.MsgCliIdByPkt(pkt)
+	name, _ := retroproto.MsgCliNameByID(id)
 	s.svr.logger.Infow("received packet from client",
 		"message_name", name,
 		"packet", pkt,
@@ -170,32 +170,32 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 	defer cancel()
 
 	switch id {
-	case d1proto.AccountQueuePosition:
+	case retroproto.AccountQueuePosition:
 		err := s.handleAccountQueuePosition()
 		if err != nil {
 			return err
 		}
-	case d1proto.AksPing:
+	case retroproto.AksPing:
 		err := s.handleAksPing()
 		if err != nil {
 			return err
 		}
-	case d1proto.AksQuickPing:
+	case retroproto.AksQuickPing:
 		err := s.handleAksQuickPing()
 		if err != nil {
 			return err
 		}
-	case d1proto.BasicsRequestAveragePing:
+	case retroproto.BasicsRequestAveragePing:
 		err := s.handleBasicsRequestAveragePing()
 		if err != nil {
 			return err
 		}
-	case d1proto.BasicsGetDate:
+	case retroproto.BasicsGetDate:
 		err := s.handleBasicsGetDate()
 		if err != nil {
 			return err
 		}
-	case d1proto.InfosSendScreenInfo:
+	case retroproto.InfosSendScreenInfo:
 		msg := msgcli.InfosSendScreenInfo{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -205,7 +205,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountSendTicket:
+	case retroproto.AccountSendTicket:
 		msg := msgcli.AccountSendTicket{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -215,7 +215,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountUseKey:
+	case retroproto.AccountUseKey:
 		msg := msgcli.AccountUseKey{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -225,17 +225,17 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountRequestRegionalVersion:
+	case retroproto.AccountRequestRegionalVersion:
 		err := s.handleAccountRequestRegionalVersion()
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountGetGifts:
+	case retroproto.AccountGetGifts:
 		err := s.handleAccountGetGifts()
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountSendIdentity:
+	case retroproto.AccountSendIdentity:
 		msg := msgcli.AccountSendIdentity{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -245,22 +245,22 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountGetCharacters:
+	case retroproto.AccountGetCharacters:
 		err := s.handleAccountGetCharacters(ctx)
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountGetCharactersForced:
+	case retroproto.AccountGetCharactersForced:
 		err := s.handleAccountGetCharactersForced(ctx)
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountGetRandomCharacterName:
+	case retroproto.AccountGetRandomCharacterName:
 		err := s.handleAccountGetRandomCharacterName()
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountSetCharacter:
+	case retroproto.AccountSetCharacter:
 		msg := msgcli.AccountSetCharacter{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -270,7 +270,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountAddCharacter:
+	case retroproto.AccountAddCharacter:
 		msg := msgcli.AccountAddCharacter{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -280,7 +280,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountDeleteCharacter:
+	case retroproto.AccountDeleteCharacter:
 		msg := msgcli.AccountDeleteCharacter{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -290,7 +290,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.GameCreate:
+	case retroproto.GameCreate:
 		msg := msgcli.GameCreate{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -300,12 +300,12 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.GameGetExtraInformations:
+	case retroproto.GameGetExtraInformations:
 		err := s.handleGameGetExtraInformations(ctx)
 		if err != nil {
 			return err
 		}
-	case d1proto.ChatRequestSubscribeChannelAdd:
+	case retroproto.ChatRequestSubscribeChannelAdd:
 		msg := msgcli.ChatRequestSubscribeChannelAdd{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -315,7 +315,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ChatRequestSubscribeChannelRemove:
+	case retroproto.ChatRequestSubscribeChannelRemove:
 		msg := msgcli.ChatRequestSubscribeChannelRemove{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -325,7 +325,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ChatSend:
+	case retroproto.ChatSend:
 		msg := msgcli.ChatSend{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -335,7 +335,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.DialogCreate:
+	case retroproto.DialogCreate:
 		msg := msgcli.DialogCreate{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -345,12 +345,12 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.DialogRequestLeave:
+	case retroproto.DialogRequestLeave:
 		err := s.handleDialogRequestLeave(ctx)
 		if err != nil {
 			return err
 		}
-	case d1proto.DialogResponse:
+	case retroproto.DialogResponse:
 		msg := msgcli.DialogResponse{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -360,7 +360,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangeRequest:
+	case retroproto.ExchangeRequest:
 		msg := msgcli.ExchangeRequest{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -370,7 +370,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangeBigStoreType:
+	case retroproto.ExchangeBigStoreType:
 		msg := msgcli.ExchangeBigStoreType{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -380,7 +380,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangeBigStoreItemList:
+	case retroproto.ExchangeBigStoreItemList:
 		msg := msgcli.ExchangeBigStoreItemList{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -390,7 +390,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangeBigStoreSearch:
+	case retroproto.ExchangeBigStoreSearch:
 		msg := msgcli.ExchangeBigStoreSearch{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -400,7 +400,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangeGetItemMiddlePriceInBigStore:
+	case retroproto.ExchangeGetItemMiddlePriceInBigStore:
 		msg := msgcli.ExchangeGetItemMiddlePriceInBigStore{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -410,7 +410,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangeBigStoreBuy:
+	case retroproto.ExchangeBigStoreBuy:
 		msg := msgcli.ExchangeBigStoreBuy{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -420,12 +420,12 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangeLeave:
+	case retroproto.ExchangeLeave:
 		err := s.handleExchangeLeave(ctx)
 		if err != nil {
 			return err
 		}
-	case d1proto.ItemsDestroy:
+	case retroproto.ItemsDestroy:
 		msg := msgcli.ItemsDestroy{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -435,7 +435,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ItemsDrop:
+	case retroproto.ItemsDrop:
 		msg := msgcli.ItemsDrop{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -445,7 +445,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ItemsRequestMovement:
+	case retroproto.ItemsRequestMovement:
 		msg := msgcli.ItemsRequestMovement{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -455,7 +455,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.AccountBoost:
+	case retroproto.AccountBoost:
 		msg := msgcli.AccountBoost{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -465,7 +465,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.SpellsBoost:
+	case retroproto.SpellsBoost:
 		msg := msgcli.SpellsBoost{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -475,7 +475,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.SpellsForget:
+	case retroproto.SpellsForget:
 		msg := msgcli.SpellsForget{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -485,7 +485,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.SpellsMoveToUsed:
+	case retroproto.SpellsMoveToUsed:
 		msg := msgcli.SpellsMoveToUsed{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -495,7 +495,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ItemsUseNoConfirm:
+	case retroproto.ItemsUseNoConfirm:
 		msg := msgcli.ItemsUseNoConfirm{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -505,7 +505,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.EmotesSetDirection:
+	case retroproto.EmotesSetDirection:
 		msg := msgcli.EmotesSetDirection{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -515,7 +515,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.MountRequestData:
+	case retroproto.MountRequestData:
 		msg := msgcli.MountRequestData{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -525,7 +525,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.MountRename:
+	case retroproto.MountRename:
 		msg := msgcli.MountRename{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -535,20 +535,20 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.MountFree:
+	case retroproto.MountFree:
 		err := s.handleMountFree(ctx)
 		if err != nil {
 			return err
 		}
-	case d1proto.MountRide:
+	case retroproto.MountRide:
 		err := s.handleMountRide(ctx)
 		if err != nil {
 			return err
 		}
-	case d1proto.GameActionsSendActions:
+	case retroproto.GameActionsSendActions:
 		msg := msgcli.GameActionsSendActions{}
 		err := msg.Deserialize(extra)
-		if errors.Is(err, d1proto.ErrNotImplemented) {
+		if errors.Is(err, retroproto.ErrNotImplemented) {
 			s.sendMessage(msgsvr.InfosMessage{
 				ChatId: protoenum.InfosMessageChatId.Error,
 				Messages: []prototyp.InfosMessageMessage{
@@ -566,7 +566,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 				return err
 			}
 		}
-	case d1proto.GameActionCancel:
+	case retroproto.GameActionCancel:
 		msg := msgcli.GameActionCancel{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -576,7 +576,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.GameActionAck:
+	case retroproto.GameActionAck:
 		msg := msgcli.GameActionAck{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -586,7 +586,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangePutInShedFromCertificate:
+	case retroproto.ExchangePutInShedFromCertificate:
 		msg := msgcli.ExchangePutInShedFromCertificate{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -596,7 +596,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangePutInShedFromInventory:
+	case retroproto.ExchangePutInShedFromInventory:
 		msg := msgcli.ExchangePutInShedFromInventory{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -606,7 +606,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangePutInCertificateFromShed:
+	case retroproto.ExchangePutInCertificateFromShed:
 		msg := msgcli.ExchangePutInCertificateFromShed{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -616,7 +616,7 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 		if err != nil {
 			return err
 		}
-	case d1proto.ExchangePutInInventoryFromShed:
+	case retroproto.ExchangePutInInventoryFromShed:
 		msg := msgcli.ExchangePutInInventoryFromShed{}
 		err := msg.Deserialize(extra)
 		if err != nil {
@@ -641,49 +641,49 @@ func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
 	return nil
 }
 
-func (s *session) frameMessage(id d1proto.MsgCliId) bool {
+func (s *session) frameMessage(id retroproto.MsgCliId) bool {
 	switch id {
-	case d1proto.AccountQueuePosition,
-		d1proto.AksPing,
-		d1proto.AksQuickPing,
-		d1proto.BasicsRequestAveragePing,
-		d1proto.BasicsGetDate,
-		d1proto.InfosSendScreenInfo:
+	case retroproto.AccountQueuePosition,
+		retroproto.AksPing,
+		retroproto.AksQuickPing,
+		retroproto.BasicsRequestAveragePing,
+		retroproto.BasicsGetDate,
+		retroproto.InfosSendScreenInfo:
 		return true
 	}
 
 	status := s.status.Load()
 	switch status {
 	case statusExpectingAccountSendTicket:
-		if id != d1proto.AccountSendTicket {
+		if id != retroproto.AccountSendTicket {
 			return false
 		}
 	case statusExpectingAccountUseKey:
-		if id != d1proto.AccountUseKey {
+		if id != retroproto.AccountUseKey {
 			return false
 		}
 	case statusExpectingAccountRequestRegionalVersion:
-		if id != d1proto.AccountRequestRegionalVersion {
+		if id != retroproto.AccountRequestRegionalVersion {
 			return false
 		}
 	case statusExpectingAccountGetGifts:
-		if id != d1proto.AccountGetGifts {
+		if id != retroproto.AccountGetGifts {
 			return false
 		}
 	case statusExpectingAccountSetCharacter:
 		switch id {
-		case d1proto.AccountSetCharacter,
-			d1proto.AccountSendIdentity,
-			d1proto.AccountGetCharacters,
-			d1proto.AccountGetCharactersForced,
-			d1proto.AccountAddCharacter,
-			d1proto.AccountGetRandomCharacterName,
-			d1proto.AccountDeleteCharacter:
+		case retroproto.AccountSetCharacter,
+			retroproto.AccountSendIdentity,
+			retroproto.AccountGetCharacters,
+			retroproto.AccountGetCharactersForced,
+			retroproto.AccountAddCharacter,
+			retroproto.AccountGetRandomCharacterName,
+			retroproto.AccountDeleteCharacter:
 		default:
 			return false
 		}
 	case statusExpectingGameCreate:
-		if id != d1proto.GameCreate {
+		if id != retroproto.GameCreate {
 			return false
 		}
 	}
@@ -693,7 +693,7 @@ func (s *session) frameMessage(id d1proto.MsgCliId) bool {
 func (s *session) sendMessage(msg msgOut) {
 	pkt, err := msg.Serialized()
 	if err != nil {
-		name, _ := d1proto.MsgSvrNameByID(msg.ProtocolId())
+		name, _ := retroproto.MsgSvrNameByID(msg.ProtocolId())
 		s.svr.logger.Errorw(fmt.Errorf("could not serialize message: %w", err).Error(),
 			"name", name,
 		)
@@ -703,8 +703,8 @@ func (s *session) sendMessage(msg msgOut) {
 }
 
 func (s *session) sendPacket(pkt string) {
-	id, _ := d1proto.MsgSvrIdByPkt(pkt)
-	name, _ := d1proto.MsgSvrNameByID(id)
+	id, _ := retroproto.MsgSvrIdByPkt(pkt)
+	name, _ := retroproto.MsgSvrNameByID(id)
 	s.svr.logger.Infow("sent packet to client",
 		"message_name", name,
 		"packet", pkt,
@@ -719,7 +719,7 @@ func (s *session) forgetSpell(ctx context.Context, id int) error {
 		return nil
 	}
 
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -739,7 +739,7 @@ func (s *session) forgetSpell(ctx context.Context, id int) error {
 		return errors.New("character doesn't know spell")
 	}
 
-	err = s.svr.d1.UpdateCharacter(ctx, char)
+	err = s.svr.retro.UpdateCharacter(ctx, char)
 	if err != nil {
 		return err
 	}
@@ -764,11 +764,11 @@ func (s *session) forgetSpell(ctx context.Context, id int) error {
 }
 
 func (s *session) setLevel(ctx context.Context, level int) error {
-	if level < 1 || level > len(d1.CharacterXPFloors)+1 {
+	if level < 1 || level > len(retro.CharacterXPFloors)+1 {
 		return errors.New("invalid level")
 	}
 
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -777,11 +777,11 @@ func (s *session) setLevel(ctx context.Context, level int) error {
 
 	xp := 0
 	if level >= 2 {
-		xp = d1.CharacterXPFloors[level-2]
+		xp = retro.CharacterXPFloors[level-2]
 	}
 	char.XP = xp
 
-	err = s.svr.d1.UpdateCharacter(ctx, char)
+	err = s.svr.retro.UpdateCharacter(ctx, char)
 	if err != nil {
 		return err
 	}
@@ -809,7 +809,7 @@ func (s *session) setLevel(ctx context.Context, level int) error {
 						}
 					}
 					if !found {
-						char.Spells = append(char.Spells, d1.CharacterSpell{
+						char.Spells = append(char.Spells, retro.CharacterSpell{
 							Id:       id,
 							Level:    spellLevel.Grade,
 							Position: 0,
@@ -831,18 +831,18 @@ func (s *session) setLevel(ctx context.Context, level int) error {
 		} else {
 			char.BonusPoints = maxBonusPoints - usedBonusPoints
 
-			err := s.svr.d1.UpdateCharacter(ctx, char)
+			err := s.svr.retro.UpdateCharacter(ctx, char)
 			if err != nil {
 				return err
 			}
 		}
 
-		char, err = s.svr.d1.Character(ctx, s.characterId)
+		char, err = s.svr.retro.Character(ctx, s.characterId)
 		if err != nil {
 			return err
 		}
 
-		var spells []d1.CharacterSpell
+		var spells []retro.CharacterSpell
 		for _, spell := range char.Spells {
 			t, ok := s.svr.cache.static.spells[spell.Id]
 			if !ok {
@@ -875,7 +875,7 @@ func (s *session) setLevel(ctx context.Context, level int) error {
 		char.Spells[i] = spell
 	}
 
-	err = s.svr.d1.UpdateCharacter(ctx, char)
+	err = s.svr.retro.UpdateCharacter(ctx, char)
 	if err != nil {
 		return err
 	}
@@ -899,7 +899,7 @@ func (s *session) setLevel(ctx context.Context, level int) error {
 }
 
 func (s *session) resetCharacteristics(ctx context.Context) error {
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -913,7 +913,7 @@ func (s *session) resetCharacteristics(ctx context.Context) error {
 
 	char.BonusPoints = (char.Level() - 1) * 5
 
-	err = s.svr.d1.UpdateCharacter(ctx, char)
+	err = s.svr.retro.UpdateCharacter(ctx, char)
 	if err != nil {
 		return err
 	}
@@ -938,7 +938,7 @@ func (s *session) resetCharacteristics(ctx context.Context) error {
 }
 
 func (s *session) mountOrDismount(ctx context.Context, mount bool) error {
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -958,13 +958,13 @@ func (s *session) mountOrDismount(ctx context.Context, mount bool) error {
 	}
 
 	if mount {
-		charItems, err := s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+		charItems, err := s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 		if err != nil {
 			return err
 		}
 
 		for _, v := range charItems {
-			if v.Position == d1typ.CharacterItemPositionPet {
+			if v.Position == retrotyp.CharacterItemPositionPet {
 				err = s.unEquip(ctx, v.Id)
 				if err != nil {
 					return err
@@ -981,7 +981,7 @@ func (s *session) mountOrDismount(ctx context.Context, mount bool) error {
 
 	char.Mounting = mount
 
-	err = s.svr.d1.UpdateCharacter(ctx, char)
+	err = s.svr.retro.UpdateCharacter(ctx, char)
 	if err != nil {
 		return err
 	}
@@ -989,7 +989,7 @@ func (s *session) mountOrDismount(ctx context.Context, mount bool) error {
 	// Mount data is not changing (energy or tiredness, for example) in this type of server, so it's not necessary
 	// to send MountEquipSuccess message.
 	/*if mount {
-		mount, err := s.svr.d1.Mount(ctx, char.MountId)
+		mount, err := s.svr.retro.Mount(ctx, char.MountId)
 		if err != nil {
 			return err
 		}
@@ -1033,13 +1033,13 @@ func (s *session) mountOrDismount(ctx context.Context, mount bool) error {
 	return nil
 }
 
-func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterItemPosition) error {
-	if (position < d1typ.CharacterItemPositionAmulet || position > d1typ.CharacterItemPositionDragoturkey) &&
-		(position < d1typ.CharacterItemPositionMutationItem || position > d1typ.CharacterItemPositionFollowingCharacter) {
+func (s *session) equip(ctx context.Context, id int, position retrotyp.CharacterItemPosition) error {
+	if (position < retrotyp.CharacterItemPositionAmulet || position > retrotyp.CharacterItemPositionDragoturkey) &&
+		(position < retrotyp.CharacterItemPositionMutationItem || position > retrotyp.CharacterItemPositionFollowingCharacter) {
 		return errors.New("invalid desired position for item")
 	}
 
-	charItems, err := s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+	charItems, err := s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -1051,7 +1051,7 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 		}
 	}
 
-	charItems, err = s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+	charItems, err = s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -1068,69 +1068,69 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 
 	wrongPosition := false
 	switch template.Type {
-	case d1typ.ItemTypeAmulet:
-		if position != d1typ.CharacterItemPositionAmulet {
+	case retrotyp.ItemTypeAmulet:
+		if position != retrotyp.CharacterItemPositionAmulet {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeRing:
-		if position != d1typ.CharacterItemPositionRingRight && position != d1typ.CharacterItemPositionRingLeft {
+	case retrotyp.ItemTypeRing:
+		if position != retrotyp.CharacterItemPositionRingRight && position != retrotyp.CharacterItemPositionRingLeft {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeBelt:
-		if position != d1typ.CharacterItemPositionBelt {
+	case retrotyp.ItemTypeBelt:
+		if position != retrotyp.CharacterItemPositionBelt {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeBoots:
-		if position != d1typ.CharacterItemPositionBoots {
+	case retrotyp.ItemTypeBoots:
+		if position != retrotyp.CharacterItemPositionBoots {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeHat:
-		if position != d1typ.CharacterItemPositionHat {
+	case retrotyp.ItemTypeHat:
+		if position != retrotyp.CharacterItemPositionHat {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeCloak:
-		if position != d1typ.CharacterItemPositionCloak {
+	case retrotyp.ItemTypeCloak:
+		if position != retrotyp.CharacterItemPositionCloak {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypePet:
-		if position != d1typ.CharacterItemPositionPet {
+	case retrotyp.ItemTypePet:
+		if position != retrotyp.CharacterItemPositionPet {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeDofus:
-		if position < d1typ.CharacterItemPositionDofus1 || position > d1typ.CharacterItemPositionDofus6 {
+	case retrotyp.ItemTypeDofus:
+		if position < retrotyp.CharacterItemPositionDofus1 || position > retrotyp.CharacterItemPositionDofus6 {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeBackpack:
-		if position != d1typ.CharacterItemPositionCloak {
+	case retrotyp.ItemTypeBackpack:
+		if position != retrotyp.CharacterItemPositionCloak {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeShield:
-		if position != d1typ.CharacterItemPositionShield {
+	case retrotyp.ItemTypeShield:
+		if position != retrotyp.CharacterItemPositionShield {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeBow,
-		d1typ.ItemTypeWand,
-		d1typ.ItemTypeStaff,
-		d1typ.ItemTypeDagger,
-		d1typ.ItemTypeSword,
-		d1typ.ItemTypeHammer,
-		d1typ.ItemTypeShovel,
-		d1typ.ItemTypeAxe,
-		d1typ.ItemTypeTool,
-		d1typ.ItemTypePickaxe,
-		d1typ.ItemTypeScythe,
-		d1typ.ItemTypeSoulStone,
-		d1typ.ItemTypeCrossbow,
-		d1typ.ItemTypeMagicWeapon:
-		if position != d1typ.CharacterItemPositionWeapon {
+	case retrotyp.ItemTypeBow,
+		retrotyp.ItemTypeWand,
+		retrotyp.ItemTypeStaff,
+		retrotyp.ItemTypeDagger,
+		retrotyp.ItemTypeSword,
+		retrotyp.ItemTypeHammer,
+		retrotyp.ItemTypeShovel,
+		retrotyp.ItemTypeAxe,
+		retrotyp.ItemTypeTool,
+		retrotyp.ItemTypePickaxe,
+		retrotyp.ItemTypeScythe,
+		retrotyp.ItemTypeSoulStone,
+		retrotyp.ItemTypeCrossbow,
+		retrotyp.ItemTypeMagicWeapon:
+		if position != retrotyp.CharacterItemPositionWeapon {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeCandy:
-		if position != d1typ.CharacterItemPositionBoostFood {
+	case retrotyp.ItemTypeCandy:
+		if position != retrotyp.CharacterItemPositionBoostFood {
 			wrongPosition = true
 		}
-	case d1typ.ItemTypeMountCertificate:
-		if position != d1typ.CharacterItemPositionDragoturkey {
+	case retrotyp.ItemTypeMountCertificate:
+		if position != retrotyp.CharacterItemPositionDragoturkey {
 			wrongPosition = true
 		}
 	default:
@@ -1140,7 +1140,7 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 		return errNotAllowed
 	}
 
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -1151,7 +1151,7 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 	}
 
 	for _, v := range charItems {
-		if v.Position < d1typ.CharacterItemPositionAmulet || v.Position > d1typ.CharacterItemPositionShield {
+		if v.Position < retrotyp.CharacterItemPositionAmulet || v.Position > retrotyp.CharacterItemPositionShield {
 			continue
 		}
 
@@ -1160,17 +1160,17 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 			return errors.New("item template not found")
 		}
 
-		if t.Id == template.Id && (template.ItemSetId != 0 || template.Type == d1typ.ItemTypeDofus) {
+		if t.Id == template.Id && (template.ItemSetId != 0 || template.Type == retrotyp.ItemTypeDofus) {
 			s.sendMessage(msgsvr.ItemsAddError{Reason: protoenum.ItemsAddErrorReason.AlreadyEquipped})
 			return nil
 		}
 	}
 
 	switch position {
-	case d1typ.CharacterItemPositionWeapon:
+	case retrotyp.CharacterItemPositionWeapon:
 		if template.TwoHands {
 			for _, v := range charItems {
-				if v.Position == d1typ.CharacterItemPositionShield {
+				if v.Position == retrotyp.CharacterItemPositionShield {
 					err = s.unEquip(ctx, v.Id)
 					if err != nil {
 						return err
@@ -1184,9 +1184,9 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 				}
 			}
 		}
-	case d1typ.CharacterItemPositionShield:
+	case retrotyp.CharacterItemPositionShield:
 		for _, v := range charItems {
-			if v.Position == d1typ.CharacterItemPositionWeapon {
+			if v.Position == retrotyp.CharacterItemPositionWeapon {
 				t, ok := s.svr.cache.static.items[v.TemplateId]
 				if !ok {
 					return errors.New("item template not found")
@@ -1205,7 +1205,7 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 				break
 			}
 		}
-	case d1typ.CharacterItemPositionPet:
+	case retrotyp.CharacterItemPositionPet:
 		if char.Mounting {
 			err := s.mountOrDismount(ctx, false)
 			if err != nil {
@@ -1214,32 +1214,32 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 		}
 	}
 
-	if position == d1typ.CharacterItemPositionDragoturkey {
+	if position == retrotyp.CharacterItemPositionDragoturkey {
 		if char.MountId != 0 {
 			err := s.mountOrDismount(ctx, false)
 			if err != nil {
 				return err
 			}
 
-			char, err = s.svr.d1.Character(ctx, s.characterId)
+			char, err = s.svr.retro.Character(ctx, s.characterId)
 			if err != nil {
 				return err
 			}
 
-			mount, err := s.svr.d1.Mount(ctx, char.MountId)
+			mount, err := s.svr.retro.Mount(ctx, char.MountId)
 			if err != nil {
 				return err
 			}
 
 			char.MountId = 0
-			err = s.svr.d1.UpdateCharacter(ctx, char)
+			err = s.svr.retro.UpdateCharacter(ctx, char)
 			if err != nil {
 				return err
 			}
 
 			s.sendMessage(msgsvr.MountUnequip{})
 
-			mountCertificateId, ok := d1.MountCertificateIdByMountTemplateId[mount.TemplateId]
+			mountCertificateId, ok := retro.MountCertificateIdByMountTemplateId[mount.TemplateId]
 			if !ok {
 				return errors.New("mount certificate id not found")
 			}
@@ -1249,23 +1249,23 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 				return errors.New("mount template not found")
 			}
 
-			mountCertificate := d1.CharacterItem{
-				Item: d1.Item{
+			mountCertificate := retro.CharacterItem{
+				Item: retro.Item{
 					TemplateId: mountCertificateId,
 					Quantity:   1,
 					Effects:    mountTemplate.Effects(mount.Level()),
 				},
-				Position:    d1typ.CharacterItemPositionInventory,
+				Position:    retrotyp.CharacterItemPositionInventory,
 				CharacterId: s.characterId,
 			}
 
-			mountCertificate.Effects = append(mountCertificate.Effects, d1typ.Effect{
+			mountCertificate.Effects = append(mountCertificate.Effects, retrotyp.Effect{
 				Id:       995,
 				DiceNum:  mount.Id,
 				DiceSide: 0,
 			})
 
-			id, err := s.svr.d1.CreateCharacterItem(ctx, mountCertificate)
+			id, err := s.svr.retro.CreateCharacterItem(ctx, mountCertificate)
 			if err != nil {
 				return err
 			}
@@ -1296,7 +1296,7 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 			return errors.New("mount id was not found in mount certificate")
 		}
 
-		err := s.svr.d1.DeleteCharacterItem(ctx, item.Id)
+		err := s.svr.retro.DeleteCharacterItem(ctx, item.Id)
 		if err != nil {
 			return err
 		}
@@ -1308,12 +1308,12 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 		}
 
 		char.MountId = mountId
-		err = s.svr.d1.UpdateCharacter(ctx, char)
+		err = s.svr.retro.UpdateCharacter(ctx, char)
 		if err != nil {
 			return err
 		}
 
-		mount, err := s.svr.d1.Mount(ctx, char.MountId)
+		mount, err := s.svr.retro.Mount(ctx, char.MountId)
 		if err != nil {
 			return err
 		}
@@ -1346,11 +1346,11 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 	}
 
 	switch position {
-	case d1typ.CharacterItemPositionWeapon,
-		d1typ.CharacterItemPositionHat,
-		d1typ.CharacterItemPositionCloak,
-		d1typ.CharacterItemPositionPet,
-		d1typ.CharacterItemPositionShield:
+	case retrotyp.CharacterItemPositionWeapon,
+		retrotyp.CharacterItemPositionHat,
+		retrotyp.CharacterItemPositionCloak,
+		retrotyp.CharacterItemPositionPet,
+		retrotyp.CharacterItemPositionShield:
 
 		err := s.sendAccessories(ctx)
 		if err != nil {
@@ -1368,7 +1368,7 @@ func (s *session) equip(ctx context.Context, id int, position d1typ.CharacterIte
 }
 
 func (s *session) unEquip(ctx context.Context, id int) error {
-	item, err := s.svr.d1.CharacterItem(ctx, id)
+	item, err := s.svr.retro.CharacterItem(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -1377,12 +1377,12 @@ func (s *session) unEquip(ctx context.Context, id int) error {
 		return errInvalidRequest
 	}
 
-	if (item.Position < d1typ.CharacterItemPositionAmulet || item.Position > d1typ.CharacterItemPositionDragoturkey) &&
-		(item.Position != d1typ.CharacterItemPositionBoostFood) {
+	if (item.Position < retrotyp.CharacterItemPositionAmulet || item.Position > retrotyp.CharacterItemPositionDragoturkey) &&
+		(item.Position != retrotyp.CharacterItemPositionBoostFood) {
 		return errNotAllowed
 	}
 
-	err = s.moveItemToPosition(ctx, item.Id, item.Quantity, d1typ.CharacterItemPositionInventory)
+	err = s.moveItemToPosition(ctx, item.Id, item.Quantity, retrotyp.CharacterItemPositionInventory)
 	if err != nil {
 		return err
 	}
@@ -1400,11 +1400,11 @@ func (s *session) unEquip(ctx context.Context, id int) error {
 	}
 
 	switch item.Position {
-	case d1typ.CharacterItemPositionWeapon,
-		d1typ.CharacterItemPositionHat,
-		d1typ.CharacterItemPositionCloak,
-		d1typ.CharacterItemPositionPet,
-		d1typ.CharacterItemPositionShield:
+	case retrotyp.CharacterItemPositionWeapon,
+		retrotyp.CharacterItemPositionHat,
+		retrotyp.CharacterItemPositionCloak,
+		retrotyp.CharacterItemPositionPet,
+		retrotyp.CharacterItemPositionShield:
 
 		err := s.sendAccessories(ctx)
 		if err != nil {
@@ -1421,9 +1421,9 @@ func (s *session) unEquip(ctx context.Context, id int) error {
 	return nil
 }
 
-func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, position d1typ.CharacterItemPosition) error {
-	if (position < d1typ.CharacterItemPositionInventory || position > d1typ.CharacterItemPositionShield) &&
-		(position < d1typ.CharacterItemPositionMutationItem || position > d1typ.CharacterItemPositionFollowingCharacter) &&
+func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, position retrotyp.CharacterItemPosition) error {
+	if (position < retrotyp.CharacterItemPositionInventory || position > retrotyp.CharacterItemPositionShield) &&
+		(position < retrotyp.CharacterItemPositionMutationItem || position > retrotyp.CharacterItemPositionFollowingCharacter) &&
 		(position < 35 || position > 62) {
 		return errors.New("invalid position")
 	}
@@ -1432,7 +1432,7 @@ func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, 
 		return errors.New("invalid quantity")
 	}
 
-	charItems, err := s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+	charItems, err := s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -1446,7 +1446,7 @@ func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, 
 		return errors.New("invalid quantity")
 	}
 
-	otherItems := make(map[int]d1.Item)
+	otherItems := make(map[int]retro.Item)
 	for _, v := range charItems {
 		if v.Position != position {
 			continue
@@ -1469,7 +1469,7 @@ func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, 
 		charBatch := charItems[batch.Id]
 		charBatch.Quantity += quantity
 
-		err = s.svr.d1.UpdateCharacterItem(ctx, charBatch)
+		err = s.svr.retro.UpdateCharacterItem(ctx, charBatch)
 		if err != nil {
 			return err
 		}
@@ -1479,31 +1479,31 @@ func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, 
 			Quantity: charBatch.Quantity,
 		})
 	} else {
-		if (position >= d1typ.CharacterItemPositionAmulet && position <= d1typ.CharacterItemPositionShield) ||
-			(position >= d1typ.CharacterItemPositionMutationItem && position <= d1typ.CharacterItemPositionFollowingCharacter) {
+		if (position >= retrotyp.CharacterItemPositionAmulet && position <= retrotyp.CharacterItemPositionShield) ||
+			(position >= retrotyp.CharacterItemPositionMutationItem && position <= retrotyp.CharacterItemPositionFollowingCharacter) {
 			for _, v := range otherItems {
 				err := s.unEquip(ctx, v.Id)
 				if err != nil {
 					return err
 				}
 			}
-		} else if position != d1typ.CharacterItemPositionInventory {
+		} else if position != retrotyp.CharacterItemPositionInventory {
 			for _, otherItem := range otherItems {
-				err := s.moveItemToPosition(ctx, otherItem.Id, otherItem.Quantity, d1typ.CharacterItemPositionInventory)
+				err := s.moveItemToPosition(ctx, otherItem.Id, otherItem.Quantity, retrotyp.CharacterItemPositionInventory)
 				if err != nil {
 					return err
 				}
 			}
 		}
 
-		item, err = s.svr.d1.CharacterItem(ctx, itemId)
+		item, err = s.svr.retro.CharacterItem(ctx, itemId)
 		if err != nil {
 			return err
 		}
 
 		if quantity == item.Quantity {
 			item.Position = position
-			err := s.svr.d1.UpdateCharacterItem(ctx, item)
+			err := s.svr.retro.UpdateCharacterItem(ctx, item)
 			if err != nil {
 				return err
 			}
@@ -1518,8 +1518,8 @@ func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, 
 				return err
 			}
 
-			newItem := d1.CharacterItem{
-				Item: d1.Item{
+			newItem := retro.CharacterItem{
+				Item: retro.Item{
 					TemplateId: item.TemplateId,
 					Quantity:   quantity,
 					Effects:    item.Effects,
@@ -1528,7 +1528,7 @@ func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, 
 				CharacterId: s.characterId,
 			}
 
-			id, err := s.svr.d1.CreateCharacterItem(ctx, newItem)
+			id, err := s.svr.retro.CreateCharacterItem(ctx, newItem)
 			if err != nil {
 				return err
 			}
@@ -1552,16 +1552,16 @@ func (s *session) moveItemToPosition(ctx context.Context, itemId, quantity int, 
 	return nil
 }
 
-func (s *session) addItemToInventory(ctx context.Context, item d1.Item) (id int, err error) {
-	var charItems map[int]d1.CharacterItem
-	charItems, err = s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+func (s *session) addItemToInventory(ctx context.Context, item retro.Item) (id int, err error) {
+	var charItems map[int]retro.CharacterItem
+	charItems, err = s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return
 	}
 
-	inventoryItems := make(map[int]d1.Item)
+	inventoryItems := make(map[int]retro.Item)
 	for k, v := range charItems {
-		if v.Position != d1typ.CharacterItemPositionInventory {
+		if v.Position != retrotyp.CharacterItemPositionInventory {
 			continue
 		}
 		inventoryItems[k] = v.Item
@@ -1572,7 +1572,7 @@ func (s *session) addItemToInventory(ctx context.Context, item d1.Item) (id int,
 		charBatch := charItems[batch.Id]
 		charBatch.Quantity += item.Quantity
 
-		err = s.svr.d1.UpdateCharacterItem(ctx, charBatch)
+		err = s.svr.retro.UpdateCharacterItem(ctx, charBatch)
 		if err != nil {
 			return
 		}
@@ -1582,13 +1582,13 @@ func (s *session) addItemToInventory(ctx context.Context, item d1.Item) (id int,
 			Quantity: charBatch.Quantity,
 		})
 	} else {
-		charItem := d1.CharacterItem{
+		charItem := retro.CharacterItem{
 			Item:        item,
-			Position:    d1typ.CharacterItemPositionInventory,
+			Position:    retrotyp.CharacterItemPositionInventory,
 			CharacterId: s.characterId,
 		}
 
-		id, err = s.svr.d1.CreateCharacterItem(ctx, charItem)
+		id, err = s.svr.retro.CreateCharacterItem(ctx, charItem)
 		if err != nil {
 			return
 		}
@@ -1616,7 +1616,7 @@ func (s *session) removeItem(ctx context.Context, id, quantity int) error {
 		return errInvalidRequest
 	}
 
-	item, err := s.svr.d1.CharacterItem(ctx, id)
+	item, err := s.svr.retro.CharacterItem(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -1630,14 +1630,14 @@ func (s *session) removeItem(ctx context.Context, id, quantity int) error {
 	}
 
 	if quantity == item.Quantity {
-		err := s.svr.d1.DeleteCharacterItem(ctx, item.Id)
+		err := s.svr.retro.DeleteCharacterItem(ctx, item.Id)
 		if err != nil {
 			return err
 		}
 		s.sendMessage(msgsvr.ItemsRemove{Id: item.Id})
 	} else {
 		item.Quantity -= quantity
-		err := s.svr.d1.UpdateCharacterItem(ctx, item)
+		err := s.svr.retro.UpdateCharacterItem(ctx, item)
 		if err != nil {
 			return err
 		}
@@ -1660,45 +1660,45 @@ func (s *session) checkConditions(ctx context.Context) error {
 		subscription = 1
 	}
 
-	positions := []d1typ.CharacterItemPosition{
-		d1typ.CharacterItemPositionDragoturkey,
+	positions := []retrotyp.CharacterItemPosition{
+		retrotyp.CharacterItemPositionDragoturkey,
 
-		d1typ.CharacterItemPositionAmulet,
-		d1typ.CharacterItemPositionWeapon,
-		d1typ.CharacterItemPositionRingRight,
-		d1typ.CharacterItemPositionBelt,
-		d1typ.CharacterItemPositionRingLeft,
-		d1typ.CharacterItemPositionBoots,
-		d1typ.CharacterItemPositionHat,
-		d1typ.CharacterItemPositionCloak,
-		d1typ.CharacterItemPositionPet,
-		d1typ.CharacterItemPositionDofus1,
-		d1typ.CharacterItemPositionDofus2,
-		d1typ.CharacterItemPositionDofus3,
-		d1typ.CharacterItemPositionDofus4,
-		d1typ.CharacterItemPositionDofus5,
-		d1typ.CharacterItemPositionDofus6,
-		d1typ.CharacterItemPositionShield,
+		retrotyp.CharacterItemPositionAmulet,
+		retrotyp.CharacterItemPositionWeapon,
+		retrotyp.CharacterItemPositionRingRight,
+		retrotyp.CharacterItemPositionBelt,
+		retrotyp.CharacterItemPositionRingLeft,
+		retrotyp.CharacterItemPositionBoots,
+		retrotyp.CharacterItemPositionHat,
+		retrotyp.CharacterItemPositionCloak,
+		retrotyp.CharacterItemPositionPet,
+		retrotyp.CharacterItemPositionDofus1,
+		retrotyp.CharacterItemPositionDofus2,
+		retrotyp.CharacterItemPositionDofus3,
+		retrotyp.CharacterItemPositionDofus4,
+		retrotyp.CharacterItemPositionDofus5,
+		retrotyp.CharacterItemPositionDofus6,
+		retrotyp.CharacterItemPositionShield,
 
-		d1typ.CharacterItemPositionMutationItem,
-		d1typ.CharacterItemPositionBoostFood,
-		d1typ.CharacterItemPositionBlessing1,
-		d1typ.CharacterItemPositionBlessing2,
-		d1typ.CharacterItemPositionCurse1,
-		d1typ.CharacterItemPositionCurse2,
-		d1typ.CharacterItemPositionRoleplayBuff,
-		d1typ.CharacterItemPositionFollowingCharacter,
+		retrotyp.CharacterItemPositionMutationItem,
+		retrotyp.CharacterItemPositionBoostFood,
+		retrotyp.CharacterItemPositionBlessing1,
+		retrotyp.CharacterItemPositionBlessing2,
+		retrotyp.CharacterItemPositionCurse1,
+		retrotyp.CharacterItemPositionCurse2,
+		retrotyp.CharacterItemPositionRoleplayBuff,
+		retrotyp.CharacterItemPositionFollowingCharacter,
 	}
 
 	var changed bool
 
 	for _, position := range positions {
-		char, err := s.svr.d1.Character(ctx, s.characterId)
+		char, err := s.svr.retro.Character(ctx, s.characterId)
 		if err != nil {
 			return err
 		}
 
-		if position == d1typ.CharacterItemPositionDragoturkey {
+		if position == retrotyp.CharacterItemPositionDragoturkey {
 			if char.Level() < 60 && char.Mounting {
 				s.sendMessage(msgsvr.MountEquipError{Reason: protoenum.MountEquipErrorReason.Ride})
 				err = s.mountOrDismount(ctx, false)
@@ -1710,14 +1710,14 @@ func (s *session) checkConditions(ctx context.Context) error {
 			continue
 		}
 
-		var item d1.CharacterItem
+		var item retro.CharacterItem
 
-		items, err := s.svr.d1.CharacterItemsByCharacterId(ctx, char.Id)
+		items, err := s.svr.retro.CharacterItemsByCharacterId(ctx, char.Id)
 		if err != nil {
 			return err
 		}
 		for k, v := range items {
-			if v.Position == d1typ.CharacterItemPositionInventory || v.Position >= 35 {
+			if v.Position == retrotyp.CharacterItemPositionInventory || v.Position >= 35 {
 				delete(items, k)
 			} else if v.Position == position {
 				item = v
@@ -1766,39 +1766,39 @@ func (s *session) checkConditions(ctx context.Context) error {
 			}
 
 			params := map[string]interface{}{
-				string(d1typ.ItemConditionMP): characteristics[d1typ.CharacteristicIdMP].Total(),
+				string(retrotyp.ItemConditionMP): characteristics[retrotyp.CharacteristicIdMP].Total(),
 
-				string(d1typ.ItemConditionVitality):     characteristics[d1typ.CharacteristicIdVitality].Total(),
-				string(d1typ.ItemConditionWisdom):       characteristics[d1typ.CharacteristicIdWisdom].Total(),
-				string(d1typ.ItemConditionStrength):     characteristics[d1typ.CharacteristicIdStrength].Total(),
-				string(d1typ.ItemConditionIntelligence): characteristics[d1typ.CharacteristicIdIntelligence].Total(),
-				string(d1typ.ItemConditionChance):       characteristics[d1typ.CharacteristicIdChance].Total(),
-				string(d1typ.ItemConditionAgility):      characteristics[d1typ.CharacteristicIdAgility].Total(),
+				string(retrotyp.ItemConditionVitality):     characteristics[retrotyp.CharacteristicIdVitality].Total(),
+				string(retrotyp.ItemConditionWisdom):       characteristics[retrotyp.CharacteristicIdWisdom].Total(),
+				string(retrotyp.ItemConditionStrength):     characteristics[retrotyp.CharacteristicIdStrength].Total(),
+				string(retrotyp.ItemConditionIntelligence): characteristics[retrotyp.CharacteristicIdIntelligence].Total(),
+				string(retrotyp.ItemConditionChance):       characteristics[retrotyp.CharacteristicIdChance].Total(),
+				string(retrotyp.ItemConditionAgility):      characteristics[retrotyp.CharacteristicIdAgility].Total(),
 
-				string(d1typ.ItemConditionVitalityBase):     characteristics[d1typ.CharacteristicIdVitality].Base,
-				string(d1typ.ItemConditionWisdomBase):       characteristics[d1typ.CharacteristicIdWisdom].Base,
-				string(d1typ.ItemConditionStrengthBase):     characteristics[d1typ.CharacteristicIdStrength].Base,
-				string(d1typ.ItemConditionIntelligenceBase): characteristics[d1typ.CharacteristicIdIntelligence].Base,
-				string(d1typ.ItemConditionChanceBase):       characteristics[d1typ.CharacteristicIdChance].Base,
-				string(d1typ.ItemConditionAgilityBase):      characteristics[d1typ.CharacteristicIdAgility].Base,
+				string(retrotyp.ItemConditionVitalityBase):     characteristics[retrotyp.CharacteristicIdVitality].Base,
+				string(retrotyp.ItemConditionWisdomBase):       characteristics[retrotyp.CharacteristicIdWisdom].Base,
+				string(retrotyp.ItemConditionStrengthBase):     characteristics[retrotyp.CharacteristicIdStrength].Base,
+				string(retrotyp.ItemConditionIntelligenceBase): characteristics[retrotyp.CharacteristicIdIntelligence].Base,
+				string(retrotyp.ItemConditionChanceBase):       characteristics[retrotyp.CharacteristicIdChance].Base,
+				string(retrotyp.ItemConditionAgilityBase):      characteristics[retrotyp.CharacteristicIdAgility].Base,
 
-				string(d1typ.ItemConditionName):       strings.ToLower(string(char.Name)), // It seems package gval v1.0.1 is bugged, so can't use InfixTextOperator
-				string(d1typ.ItemConditionSex):        int(char.Sex),
-				string(d1typ.ItemConditionClass):      int(char.ClassId),
-				string(d1typ.ItemConditionSubscriber): subscription,
-				// string(d1typ.ItemConditionKamas):      char.Kamas,
-				string(d1typ.ItemConditionKamas):   math.MaxInt32,
-				string(d1typ.ItemConditionItem):    itemTemplates,
-				string(d1typ.ItemConditionLevel):   char.Level(),
-				string(d1typ.ItemConditionWedding): 0,
+				string(retrotyp.ItemConditionName):       strings.ToLower(string(char.Name)), // It seems package gval v1.0.1 is bugged, so can't use InfixTextOperator
+				string(retrotyp.ItemConditionSex):        int(char.Sex),
+				string(retrotyp.ItemConditionClass):      int(char.ClassId),
+				string(retrotyp.ItemConditionSubscriber): subscription,
+				// string(retrotyp.ItemConditionKamas):      char.Kamas,
+				string(retrotyp.ItemConditionKamas):   math.MaxInt32,
+				string(retrotyp.ItemConditionItem):    itemTemplates,
+				string(retrotyp.ItemConditionLevel):   char.Level(),
+				string(retrotyp.ItemConditionWedding): 0,
 
-				string(d1typ.ItemConditionAlignment):               int(char.Alignment),
-				string(d1typ.ItemConditionAlignmentLevel):          100,
-				string(d1typ.ItemConditionAlignmentGift):           0,
-				string(d1typ.ItemConditionAlignmentSpecialization): 0,
-				string(d1typ.ItemConditionAlignmentGrade):          int(char.Grade()),
+				string(retrotyp.ItemConditionAlignment):               int(char.Alignment),
+				string(retrotyp.ItemConditionAlignmentLevel):          100,
+				string(retrotyp.ItemConditionAlignmentGift):           0,
+				string(retrotyp.ItemConditionAlignmentSpecialization): 0,
+				string(retrotyp.ItemConditionAlignmentGrade):          int(char.Grade()),
 
-				string(d1typ.ItemConditionUnusable): "",
+				string(retrotyp.ItemConditionUnusable): "",
 			}
 
 			l := gval.NewLanguage(gval.PropositionalLogic(), gval.Arithmetic(),
@@ -1855,14 +1855,14 @@ func (s *session) sendItemSetBonus(ctx context.Context, id int) error {
 		return errors.New("invalid item set id")
 	}
 
-	charItems, err := s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+	charItems, err := s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
 
 	var ids []int
 	for _, v := range charItems {
-		if v.Position == d1typ.CharacterItemPositionInventory {
+		if v.Position == retrotyp.CharacterItemPositionInventory {
 			continue
 		}
 
@@ -1899,12 +1899,12 @@ func (s *session) sendItemSetBonus(ctx context.Context, id int) error {
 }
 
 func (s *session) sendAccessories(ctx context.Context) error {
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
 
-	items, err := s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+	items, err := s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -1929,20 +1929,20 @@ func (s *session) sendWeight(ctx context.Context) error {
 }
 
 func (s *session) protoWeight(ctx context.Context) (weight msgsvr.ItemsWeight, err error) {
-	var characteristics map[d1typ.CharacteristicId]d1typ.Characteristic
+	var characteristics map[retrotyp.CharacteristicId]retrotyp.Characteristic
 	characteristics, err = s.characteristics(ctx)
 	if err != nil {
 		return
 	}
 
-	maxWeight, ok := characteristics[d1typ.CharacteristicIdMaxWeight]
+	maxWeight, ok := characteristics[retrotyp.CharacteristicIdMaxWeight]
 	if !ok {
 		err = errors.New("max weight characteristic not found")
 		return
 	}
 
-	var items map[int]d1.CharacterItem
-	items, err = s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+	var items map[int]retro.CharacterItem
+	items, err = s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return
 	}
@@ -1972,7 +1972,7 @@ func (s *session) protoWeight(ctx context.Context) (weight msgsvr.ItemsWeight, e
 }
 
 func (s *session) protoStats(ctx context.Context) (stats msgsvr.AccountStats, err error) {
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return
 	}
@@ -1982,10 +1982,10 @@ func (s *session) protoStats(ctx context.Context) (stats msgsvr.AccountStats, er
 		return
 	}
 
-	initiative := characteristics[d1typ.CharacteristicIdInitiative]
-	prospecting := characteristics[d1typ.CharacteristicIdProspecting]
+	initiative := characteristics[retrotyp.CharacteristicIdInitiative]
+	prospecting := characteristics[retrotyp.CharacteristicIdProspecting]
 
-	lpMax := 50 + char.Level()*5 + characteristics[d1typ.CharacteristicIdVitality].Total()
+	lpMax := 50 + char.Level()*5 + characteristics[retrotyp.CharacteristicIdVitality].Total()
 
 	stats = msgsvr.AccountStats{
 		XP:               char.XP,
@@ -2012,56 +2012,56 @@ func (s *session) protoStats(ctx context.Context) (stats msgsvr.AccountStats, er
 	return
 }
 
-func (s *session) characteristics(ctx context.Context) (map[d1typ.CharacteristicId]d1typ.Characteristic, error) {
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+func (s *session) characteristics(ctx context.Context) (map[retrotyp.CharacteristicId]retrotyp.Characteristic, error) {
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return nil, err
 	}
 
-	items, err := s.svr.d1.CharacterItemsByCharacterId(ctx, s.characterId)
+	items, err := s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
 		return nil, err
 	}
 	for k, v := range items {
-		if v.Position < d1typ.CharacterItemPositionAmulet || v.Position > d1typ.CharacterItemPositionFollowingCharacter {
+		if v.Position < retrotyp.CharacterItemPositionAmulet || v.Position > retrotyp.CharacterItemPositionFollowingCharacter {
 			delete(items, k)
 		}
 	}
 
-	characteristics := make(map[d1typ.CharacteristicId]d1typ.Characteristic)
+	characteristics := make(map[retrotyp.CharacteristicId]retrotyp.Characteristic)
 
-	for k := range d1typ.CharacteristicIds {
-		v := d1typ.Characteristic{Id: k}
+	for k := range retrotyp.CharacteristicIds {
+		v := retrotyp.Characteristic{Id: k}
 		switch k {
-		case d1typ.CharacteristicIdAP:
+		case retrotyp.CharacteristicIdAP:
 			base := 6
 			if char.Level() >= 100 {
 				base = 7
 			}
 			v.Base = base
-		case d1typ.CharacteristicIdMP:
+		case retrotyp.CharacteristicIdMP:
 			v.Base = 3
-		case d1typ.CharacteristicIdMaxSummonedCreaturesBoost:
+		case retrotyp.CharacteristicIdMaxSummonedCreaturesBoost:
 			v.Base = 1
-		case d1typ.CharacteristicIdProspecting:
+		case retrotyp.CharacteristicIdProspecting:
 			base := 100
-			if char.ClassId == d1typ.ClassIdEnutrof {
+			if char.ClassId == retrotyp.ClassIdEnutrof {
 				base += 20
 			}
 			v.Base = base
-		case d1typ.CharacteristicIdVitality:
+		case retrotyp.CharacteristicIdVitality:
 			v.Base = char.Stats.Vitality
-		case d1typ.CharacteristicIdWisdom:
+		case retrotyp.CharacteristicIdWisdom:
 			v.Base = char.Stats.Wisdom
-		case d1typ.CharacteristicIdStrength:
+		case retrotyp.CharacteristicIdStrength:
 			v.Base = char.Stats.Strength
-		case d1typ.CharacteristicIdIntelligence:
+		case retrotyp.CharacteristicIdIntelligence:
 			v.Base = char.Stats.Intelligence
-		case d1typ.CharacteristicIdChance:
+		case retrotyp.CharacteristicIdChance:
 			v.Base = char.Stats.Chance
-		case d1typ.CharacteristicIdAgility:
+		case retrotyp.CharacteristicIdAgility:
 			v.Base = char.Stats.Agility
-		case d1typ.CharacteristicIdMaxWeight:
+		case retrotyp.CharacteristicIdMaxWeight:
 			v.Base = 1000 + char.Level()*5
 		}
 
@@ -2085,9 +2085,9 @@ func (s *session) characteristics(ctx context.Context) (map[d1typ.Characteristic
 			}
 
 			switch t.Operator {
-			case d1typ.EffectOperatorAdd:
+			case retrotyp.EffectOperatorAdd:
 				v.Equipment += effect.DiceNum
-			case d1typ.EffectOperatorSub:
+			case retrotyp.EffectOperatorSub:
 				v.Equipment -= effect.DiceNum
 			}
 
@@ -2096,7 +2096,7 @@ func (s *session) characteristics(ctx context.Context) (map[d1typ.Characteristic
 	}
 
 	if char.Mounting {
-		mount, err := s.svr.d1.Mount(ctx, char.MountId)
+		mount, err := s.svr.retro.Mount(ctx, char.MountId)
 		if err != nil {
 			return nil, err
 		}
@@ -2122,9 +2122,9 @@ func (s *session) characteristics(ctx context.Context) (map[d1typ.Characteristic
 			}
 
 			switch t.Operator {
-			case d1typ.EffectOperatorAdd:
+			case retrotyp.EffectOperatorAdd:
 				v.Equipment += effect.DiceNum
-			case d1typ.EffectOperatorSub:
+			case retrotyp.EffectOperatorSub:
 				v.Equipment -= effect.DiceNum
 			}
 
@@ -2171,9 +2171,9 @@ func (s *session) characteristics(ctx context.Context) (map[d1typ.Characteristic
 			}
 
 			switch t.Operator {
-			case d1typ.EffectOperatorAdd:
+			case retrotyp.EffectOperatorAdd:
 				v.Equipment += effect.DiceNum
-			case d1typ.EffectOperatorSub:
+			case retrotyp.EffectOperatorSub:
 				v.Equipment -= effect.DiceNum
 			}
 
@@ -2181,49 +2181,49 @@ func (s *session) characteristics(ctx context.Context) (map[d1typ.Characteristic
 		}
 	}
 
-	initiative := characteristics[d1typ.CharacteristicIdInitiative]
-	initiative.Base += characteristics[d1typ.CharacteristicIdStrength].Base
-	initiative.Base += characteristics[d1typ.CharacteristicIdIntelligence].Base
-	initiative.Base += characteristics[d1typ.CharacteristicIdChance].Base
-	initiative.Base += characteristics[d1typ.CharacteristicIdAgility].Base
-	initiative.Equipment += characteristics[d1typ.CharacteristicIdStrength].Equipment
-	initiative.Equipment += characteristics[d1typ.CharacteristicIdIntelligence].Equipment
-	initiative.Equipment += characteristics[d1typ.CharacteristicIdChance].Equipment
-	initiative.Equipment += characteristics[d1typ.CharacteristicIdAgility].Equipment
-	initiative.Feat += characteristics[d1typ.CharacteristicIdStrength].Feat
-	initiative.Feat += characteristics[d1typ.CharacteristicIdIntelligence].Feat
-	initiative.Feat += characteristics[d1typ.CharacteristicIdChance].Feat
-	initiative.Feat += characteristics[d1typ.CharacteristicIdAgility].Feat
-	initiative.Boost += characteristics[d1typ.CharacteristicIdStrength].Boost
-	initiative.Boost += characteristics[d1typ.CharacteristicIdIntelligence].Boost
-	initiative.Boost += characteristics[d1typ.CharacteristicIdChance].Boost
-	initiative.Boost += characteristics[d1typ.CharacteristicIdAgility].Boost
-	characteristics[d1typ.CharacteristicIdInitiative] = initiative
+	initiative := characteristics[retrotyp.CharacteristicIdInitiative]
+	initiative.Base += characteristics[retrotyp.CharacteristicIdStrength].Base
+	initiative.Base += characteristics[retrotyp.CharacteristicIdIntelligence].Base
+	initiative.Base += characteristics[retrotyp.CharacteristicIdChance].Base
+	initiative.Base += characteristics[retrotyp.CharacteristicIdAgility].Base
+	initiative.Equipment += characteristics[retrotyp.CharacteristicIdStrength].Equipment
+	initiative.Equipment += characteristics[retrotyp.CharacteristicIdIntelligence].Equipment
+	initiative.Equipment += characteristics[retrotyp.CharacteristicIdChance].Equipment
+	initiative.Equipment += characteristics[retrotyp.CharacteristicIdAgility].Equipment
+	initiative.Feat += characteristics[retrotyp.CharacteristicIdStrength].Feat
+	initiative.Feat += characteristics[retrotyp.CharacteristicIdIntelligence].Feat
+	initiative.Feat += characteristics[retrotyp.CharacteristicIdChance].Feat
+	initiative.Feat += characteristics[retrotyp.CharacteristicIdAgility].Feat
+	initiative.Boost += characteristics[retrotyp.CharacteristicIdStrength].Boost
+	initiative.Boost += characteristics[retrotyp.CharacteristicIdIntelligence].Boost
+	initiative.Boost += characteristics[retrotyp.CharacteristicIdChance].Boost
+	initiative.Boost += characteristics[retrotyp.CharacteristicIdAgility].Boost
+	characteristics[retrotyp.CharacteristicIdInitiative] = initiative
 
-	prospecting := characteristics[d1typ.CharacteristicIdProspecting]
-	prospecting.Base += characteristics[d1typ.CharacteristicIdChance].Base / 10
-	prospecting.Equipment += characteristics[d1typ.CharacteristicIdChance].Equipment / 10
-	prospecting.Feat += characteristics[d1typ.CharacteristicIdChance].Feat / 10
-	prospecting.Boost += characteristics[d1typ.CharacteristicIdChance].Boost / 10
-	characteristics[d1typ.CharacteristicIdProspecting] = prospecting
+	prospecting := characteristics[retrotyp.CharacteristicIdProspecting]
+	prospecting.Base += characteristics[retrotyp.CharacteristicIdChance].Base / 10
+	prospecting.Equipment += characteristics[retrotyp.CharacteristicIdChance].Equipment / 10
+	prospecting.Feat += characteristics[retrotyp.CharacteristicIdChance].Feat / 10
+	prospecting.Boost += characteristics[retrotyp.CharacteristicIdChance].Boost / 10
+	characteristics[retrotyp.CharacteristicIdProspecting] = prospecting
 
-	dodgeAP := characteristics[d1typ.CharacteristicIdDodgeAP]
-	dodgeAP.Base += characteristics[d1typ.CharacteristicIdWisdom].Base / 4
-	dodgeAP.Equipment += characteristics[d1typ.CharacteristicIdWisdom].Equipment / 4
-	dodgeAP.Feat += characteristics[d1typ.CharacteristicIdWisdom].Feat / 4
-	dodgeAP.Boost += characteristics[d1typ.CharacteristicIdWisdom].Boost / 4
-	characteristics[d1typ.CharacteristicIdDodgeAP] = dodgeAP
+	dodgeAP := characteristics[retrotyp.CharacteristicIdDodgeAP]
+	dodgeAP.Base += characteristics[retrotyp.CharacteristicIdWisdom].Base / 4
+	dodgeAP.Equipment += characteristics[retrotyp.CharacteristicIdWisdom].Equipment / 4
+	dodgeAP.Feat += characteristics[retrotyp.CharacteristicIdWisdom].Feat / 4
+	dodgeAP.Boost += characteristics[retrotyp.CharacteristicIdWisdom].Boost / 4
+	characteristics[retrotyp.CharacteristicIdDodgeAP] = dodgeAP
 
-	dodgeMP := characteristics[d1typ.CharacteristicIdDodgeMP]
-	dodgeMP.Base += characteristics[d1typ.CharacteristicIdWisdom].Base / 4
-	dodgeMP.Equipment += characteristics[d1typ.CharacteristicIdWisdom].Equipment / 4
-	dodgeMP.Feat += characteristics[d1typ.CharacteristicIdWisdom].Feat / 4
-	dodgeMP.Boost += characteristics[d1typ.CharacteristicIdWisdom].Boost / 4
-	characteristics[d1typ.CharacteristicIdDodgeMP] = dodgeMP
+	dodgeMP := characteristics[retrotyp.CharacteristicIdDodgeMP]
+	dodgeMP.Base += characteristics[retrotyp.CharacteristicIdWisdom].Base / 4
+	dodgeMP.Equipment += characteristics[retrotyp.CharacteristicIdWisdom].Equipment / 4
+	dodgeMP.Feat += characteristics[retrotyp.CharacteristicIdWisdom].Feat / 4
+	dodgeMP.Boost += characteristics[retrotyp.CharacteristicIdWisdom].Boost / 4
+	characteristics[retrotyp.CharacteristicIdDodgeMP] = dodgeMP
 
-	maxWeight := characteristics[d1typ.CharacteristicIdMaxWeight]
-	maxWeight.Base += characteristics[d1typ.CharacteristicIdStrength].Total() * 5
-	characteristics[d1typ.CharacteristicIdMaxWeight] = maxWeight
+	maxWeight := characteristics[retrotyp.CharacteristicIdMaxWeight]
+	maxWeight.Base += characteristics[retrotyp.CharacteristicIdStrength].Total() * 5
+	characteristics[retrotyp.CharacteristicIdMaxWeight] = maxWeight
 
 	return characteristics, nil
 }

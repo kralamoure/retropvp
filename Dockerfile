@@ -11,11 +11,11 @@ RUN go install -v ./...
 
 FROM ubuntu:20.04
 
-LABEL org.opencontainers.image.source="https://github.com/kralamoure/d1game"
+LABEL org.opencontainers.image.source="https://github.com/kralamoure/retropvp"
 
 RUN apt-get update && apt-get install -y
 
 WORKDIR /app
 COPY --from=builder /go/bin/ .
 
-ENTRYPOINT ["./d1game"]
+ENTRYPOINT ["./retropvp"]

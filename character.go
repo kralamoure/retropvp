@@ -1,7 +1,7 @@
-package d1game
+package retropvp
 
-import "github.com/kralamoure/d1"
+import "github.com/kralamoure/retro"
 
 type character struct {
-	d1.Character
+	retro.Character
 }

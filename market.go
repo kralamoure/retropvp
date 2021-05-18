@@ -1,16 +1,16 @@
-package d1game
+package retropvp
 
 import (
 	"context"
 	"fmt"
 	"sort"
 
-	"github.com/kralamoure/d1"
-	"github.com/kralamoure/d1/d1typ"
-	prototyp "github.com/kralamoure/d1proto/typ"
+	"github.com/kralamoure/retro"
+	"github.com/kralamoure/retro/retrotyp"
+	prototyp "github.com/kralamoure/retroproto/typ"
 )
 
-func (s *Server) marketTemplateIdsByItemType(ctx context.Context, market d1.Market, itemType d1typ.ItemType) ([]int, error) {
+func (s *Server) marketTemplateIdsByItemType(ctx context.Context, market retro.Market, itemType retrotyp.ItemType) ([]int, error) {
 	found := false
 	for _, v := range market.Types {
 		if v == itemType {
@@ -47,7 +47,7 @@ func (s *Server) marketTemplateIdsByItemType(ctx context.Context, market d1.Mark
 	return sli, nil
 }
 
-func (s *Server) marketItemsByTemplateId(ctx context.Context, market d1.Market, templateId int) ([]prototyp.ExchangeBigStoreItemsListItem, error) {
+func (s *Server) marketItemsByTemplateId(ctx context.Context, market retro.Market, templateId int) ([]prototyp.ExchangeBigStoreItemsListItem, error) {
 	_, ok := s.cache.static.items[templateId]
 	if !ok {
 		return nil, errInvalidRequest
@@ -60,7 +60,7 @@ func (s *Server) marketItemsByTemplateId(ctx context.Context, market d1.Market, 
 			continue
 		}
 
-		effects := d1.EncodeItemEffects(v.Effects)
+		effects := retro.EncodeItemEffects(v.Effects)
 
 		items[k] = prototyp.ExchangeBigStoreItemsListItem{
 			Id:        v.Id,

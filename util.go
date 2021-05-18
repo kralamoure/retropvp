@@ -1,12 +1,12 @@
-package d1game
+package retropvp
 
 import (
-	"github.com/kralamoure/d1"
-	"github.com/kralamoure/d1/d1typ"
-	prototyp "github.com/kralamoure/d1proto/typ"
+	"github.com/kralamoure/retro"
+	"github.com/kralamoure/retro/retrotyp"
+	prototyp "github.com/kralamoure/retroproto/typ"
 )
 
-func protoAccessories(items map[int]d1.CharacterItem) prototyp.CommonAccessories {
+func protoAccessories(items map[int]retro.CharacterItem) prototyp.CommonAccessories {
 	var weapon prototyp.CommonAccessoriesAccessory
 	var hat prototyp.CommonAccessoriesAccessory
 	var cloak prototyp.CommonAccessoriesAccessory
@@ -14,20 +14,20 @@ func protoAccessories(items map[int]d1.CharacterItem) prototyp.CommonAccessories
 	var shield prototyp.CommonAccessoriesAccessory
 
 	for _, v := range items {
-		if v.Position == d1typ.CharacterItemPositionInventory {
+		if v.Position == retrotyp.CharacterItemPositionInventory {
 			continue
 		}
 
 		switch v.Position {
-		case d1typ.CharacterItemPositionWeapon:
+		case retrotyp.CharacterItemPositionWeapon:
 			weapon.TemplateId = v.TemplateId
-		case d1typ.CharacterItemPositionHat:
+		case retrotyp.CharacterItemPositionHat:
 			hat.TemplateId = v.TemplateId
-		case d1typ.CharacterItemPositionCloak:
+		case retrotyp.CharacterItemPositionCloak:
 			cloak.TemplateId = v.TemplateId
-		case d1typ.CharacterItemPositionPet:
+		case retrotyp.CharacterItemPositionPet:
 			pet.TemplateId = v.TemplateId
-		case d1typ.CharacterItemPositionShield:
+		case retrotyp.CharacterItemPositionShield:
 			shield.TemplateId = v.TemplateId
 		}
 	}
@@ -41,17 +41,17 @@ func protoAccessories(items map[int]d1.CharacterItem) prototyp.CommonAccessories
 	}
 }
 
-func itemBatch(item d1.Item, others map[int]d1.Item) (d1.Item, bool) {
+func itemBatch(item retro.Item, others map[int]retro.Item) (retro.Item, bool) {
 	for _, other := range others {
 		if shouldJoinItems(item, other) {
 			return other, true
 		}
 	}
 
-	return d1.Item{}, false
+	return retro.Item{}, false
 }
 
-func shouldJoinItems(item1 d1.Item, item2 d1.Item) bool {
+func shouldJoinItems(item1 retro.Item, item2 retro.Item) bool {
 	if sameItems(item1, item2) == false {
 		return false
 	}
@@ -59,7 +59,7 @@ func shouldJoinItems(item1 d1.Item, item2 d1.Item) bool {
 	return true
 }
 
-func sameItems(item1 d1.Item, item2 d1.Item) bool {
+func sameItems(item1 retro.Item, item2 retro.Item) bool {
 	if item1.TemplateId != item2.TemplateId {
 		return false
 	}

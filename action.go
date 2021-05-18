@@ -1,13 +1,13 @@
-package d1game
+package retropvp
 
 import (
 	"context"
 	"errors"
 
-	protoenum "github.com/kralamoure/d1proto/enum"
-	"github.com/kralamoure/d1proto/msgcli"
-	"github.com/kralamoure/d1proto/msgsvr"
-	prototyp "github.com/kralamoure/d1proto/typ"
+	protoenum "github.com/kralamoure/retroproto/enum"
+	"github.com/kralamoure/retroproto/msgcli"
+	"github.com/kralamoure/retroproto/msgsvr"
+	prototyp "github.com/kralamoure/retroproto/typ"
 )
 
 func (s *session) actionMovement(ctx context.Context, m msgcli.GameActionsSendActionsActionMovement) error {
@@ -15,7 +15,7 @@ func (s *session) actionMovement(ctx context.Context, m msgcli.GameActionsSendAc
 		return errInvalidRequest
 	}
 
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
@@ -96,12 +96,12 @@ func (s *session) actionChallenge(ctx context.Context, m msgcli.GameActionsSendA
 		return nil
 	}
 
-	char, err := s.svr.d1.Character(ctx, s.characterId)
+	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
 
-	otherChar, err := s.svr.d1.Character(ctx, m.ChallengedId)
+	otherChar, err := s.svr.retro.Character(ctx, m.ChallengedId)
 	if err != nil {
 		return err
 	}
