@@ -41,7 +41,6 @@ Options:
   -a, --address string     Server listener address (default "0.0.0.0:5555")
   -p, --postgres string    PostgreSQL connection string (default "postgresql://user:password@host/database")
   -t, --timeout duration   Connection timeout (default 30m0s)
-  -m, --market string      System's market id
 
 Usage: retropvp [options]
 ```

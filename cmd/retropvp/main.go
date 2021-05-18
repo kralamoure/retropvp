@@ -38,8 +38,6 @@ var (
 	serverAddr   string
 	connTimeout  time.Duration
 	pgConnString string
-
-	serverSystemMarketId string
 )
 
 var (
@@ -196,8 +194,6 @@ func initFlagSet() {
 	flagSet.StringVarP(&serverAddr, "address", "a", "0.0.0.0:5555", "Server listener address")
 	flagSet.StringVarP(&pgConnString, "postgres", "p", "postgresql://user:password@host/database", "PostgreSQL connection string")
 	flagSet.DurationVarP(&connTimeout, "timeout", "t", 30*time.Minute, "Connection timeout")
-
-	flagSet.StringVarP(&serverSystemMarketId, "market", "m", "", "System's market id")
 
 	flagSet.SortFlags = false
 }
