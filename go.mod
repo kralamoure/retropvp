@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	github.com/PaesslerAG/gval v1.1.0
-	github.com/antonmedv/expr v1.8.9
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/happybydefault/logging v0.0.0-20210507180050-0f3842239c0e
 	github.com/jackc/pgx/v4 v4.11.0
@@ -18,7 +17,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/zippoxer/golang-petname v0.0.0-20190426180220-f3990f9184fc
 	go.uber.org/atomic v1.7.0
-	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
