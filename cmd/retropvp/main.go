@@ -27,7 +27,7 @@ import (
 
 const (
 	programName        = "retropvp"
-	programDescription = "retropvp is a PVP game server for Dofus Retro."
+	programDescription = "retropvp is an unofficial PVP game server for Dofus Retro."
 	programMoreInfo    = "https://github.com/kralamoure/retropvp"
 )
 

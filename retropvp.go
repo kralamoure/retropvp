@@ -1,4 +1,4 @@
-// Package retropvp implements a PVP game server for Dofus Retro.
+// Package retropvp implements an unofficial PVP game server for Dofus Retro.
 package retropvp
 
 import (

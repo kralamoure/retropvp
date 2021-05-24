@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/kralamoure/retropvp/actions/workflows/ci.yml/badge.svg)](https://github.com/kralamoure/retropvp/actions/workflows/ci.yml)
 
-`retropvp` is a PVP game server for Dofus Retro.
+`retropvp` is an unofficial PVP game server for Dofus Retro.
 
 ## Requirements
 
@@ -32,7 +32,7 @@ retropvp --help
 ### Output
 
 ```text
-retropvp is a PVP game server for Dofus Retro.
+retropvp is an unofficial PVP game server for Dofus Retro.
 
 Find more information at: https://github.com/kralamoure/retropvp
 
