@@ -1,5 +1,7 @@
 # retropvp
 
+[![CI](https://github.com/kralamoure/retropvp/actions/workflows/ci.yml/badge.svg)](https://github.com/kralamoure/retropvp/actions/workflows/ci.yml)
+
 `retropvp` is a PVP game server for Dofus Retro.
 
 ## Requirements
