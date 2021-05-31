@@ -472,7 +472,7 @@ func (s *session) handleAccountDeleteCharacter(ctx context.Context, m msgcli.Acc
 
 		secretAnswer := user.SecretAnswer
 
-		if strings.ToLower(strings.TrimSpace(m.SecretAnswer)) != strings.ToLower(strings.TrimSpace(secretAnswer)) {
+		if !strings.EqualFold(strings.TrimSpace(m.SecretAnswer), strings.TrimSpace(secretAnswer)) {
 			s.svr.logger.Debugw("wrong secret answer",
 				"error", err,
 				"client_address", s.conn.RemoteAddr().String(),
