@@ -103,7 +103,7 @@ func (s *session) receivePackets(ctx context.Context) error {
 			return err
 		}
 
-		err = s.handlePacket(ctx, pkt)
+		err = s.handlePacket(pkt)
 		if err != nil {
 			switch err {
 			case errNoop:
@@ -137,7 +137,7 @@ func (s *session) receivePackets(ctx context.Context) error {
 	}
 }
 
-func (s *session) handlePacket(ctx context.Context, pkt string) (err error) {
+func (s *session) handlePacket(pkt string) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("recovered from panic: %v", r)
