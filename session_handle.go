@@ -1346,10 +1346,7 @@ func (s *session) handleItemsDestroy(ctx context.Context, m msgcli.ItemsDestroy)
 }
 
 func (s *session) handleItemsDrop(ctx context.Context, m msgcli.ItemsDrop) error {
-	return s.handleItemsDestroy(ctx, msgcli.ItemsDestroy{
-		Id:       m.Id,
-		Quantity: m.Quantity,
-	})
+	return s.handleItemsDestroy(ctx, msgcli.ItemsDestroy(m))
 }
 
 // TODO
