@@ -52,11 +52,7 @@ func itemBatch(item retro.Item, others map[int]retro.Item) (retro.Item, bool) {
 }
 
 func shouldJoinItems(item1 retro.Item, item2 retro.Item) bool {
-	if sameItems(item1, item2) == false {
-		return false
-	}
-
-	return true
+	return sameItems(item1, item2)
 }
 
 func sameItems(item1 retro.Item, item2 retro.Item) bool {
