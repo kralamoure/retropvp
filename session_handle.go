@@ -404,9 +404,7 @@ func (s *session) handleAccountAddCharacter(ctx context.Context, m msgcli.Accoun
 	classSpellIds := class.Spells[:3]
 
 	spells := make([]retro.CharacterSpell, len(extraSpells)+len(classSpellIds))
-	for i := range extraSpells {
-		spells[i] = extraSpells[i]
-	}
+	copy(spells, extraSpells)
 	for i, v := range classSpellIds {
 		spells[i+len(extraSpells)] = retro.CharacterSpell{
 			Id:       v,
