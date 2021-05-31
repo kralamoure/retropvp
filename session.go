@@ -1050,6 +1050,9 @@ func (s *session) equip(ctx context.Context, id int, position retrotyp.Character
 			break
 		}
 	}
+	if err != nil {
+		return err
+	}
 
 	charItems, err = s.svr.retro.CharacterItemsByCharacterId(ctx, s.characterId)
 	if err != nil {
