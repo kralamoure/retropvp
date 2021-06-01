@@ -4,11 +4,6 @@
 
 `retropvp` is an unofficial PVP game server for Dofus Retro.
 
-## Requirements
-
-- [Git](https://git-scm.com/)
-- [Go](https://golang.org/)
-
 ## Build
 
 ```sh
@@ -20,7 +15,7 @@ go build ./cmd/...
 ## Installation
 
 ```sh
-go get -u -v github.com/kralamoure/retropvp/...
+go install github.com/kralamoure/retropvp/cmd/retropvp@latest
 ```
 
 ## Usage
