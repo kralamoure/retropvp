@@ -191,7 +191,7 @@ func initFlagSet() {
 	flagSet.BoolVarP(&printHelp, "help", "h", false, "Print usage information")
 	flagSet.BoolVarP(&debug, "debug", "d", false, "Enable debug mode")
 	flagSet.IntVarP(&serverId, "id", "i", 0, "Server ID")
-	flagSet.StringVarP(&serverAddr, "address", "a", "0.0.0.0:5555", "Server listener address")
+	flagSet.StringVarP(&serverAddr, "address", "a", "0.0.0.0:5556", "Server listener address")
 	flagSet.StringVarP(&pgConnString, "postgres", "p", "postgresql://user:password@host/database", "PostgreSQL connection string")
 	flagSet.DurationVarP(&connTimeout, "timeout", "t", 30*time.Minute, "Connection timeout")
 
