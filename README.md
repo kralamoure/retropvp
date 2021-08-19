@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/kralamoure/retropvp/actions/workflows/ci.yml/badge.svg)](https://github.com/kralamoure/retropvp/actions/workflows/ci.yml)
 
-`retropvp` is an unofficial PVP game server for Dofus Retro.
+`retropvp` is an unofficial PVP game server of Dofus Retro.
 
 ## Build
 
