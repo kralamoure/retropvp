@@ -38,6 +38,7 @@ Options:
   -a, --address string     Server listener address (default "0.0.0.0:5556")
   -p, --postgres string    PostgreSQL connection string (default "postgresql://user:password@host/database")
   -t, --timeout duration   Connection timeout (default 30m0s)
+      --ticket duration    Ticket duration (default 20s)
 
 Usage: retropvp [options]
 ```

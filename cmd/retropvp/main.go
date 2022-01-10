@@ -37,6 +37,7 @@ var (
 	serverId     int
 	serverAddr   string
 	connTimeout  time.Duration
+	ticketDur    time.Duration
 	pgConnString string
 )
 
@@ -143,6 +144,7 @@ func run() error {
 		Id:          serverId,
 		Addr:        serverAddr,
 		ConnTimeout: connTimeout,
+		TicketDur:   ticketDur,
 		Dofus:       dofusSvc,
 		Retro:       retroSvc,
 		Logger:      logging.Named("server", logger),
@@ -194,6 +196,7 @@ func initFlagSet() {
 	flagSet.StringVarP(&serverAddr, "address", "a", "0.0.0.0:5556", "Server listener address")
 	flagSet.StringVarP(&pgConnString, "postgres", "p", "postgresql://user:password@host/database", "PostgreSQL connection string")
 	flagSet.DurationVarP(&connTimeout, "timeout", "t", 30*time.Minute, "Connection timeout")
+	flagSet.DurationVarP(&ticketDur, "ticket", "", 20*time.Second, "Ticket duration")
 
 	flagSet.SortFlags = false
 }

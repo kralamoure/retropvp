@@ -29,11 +29,11 @@ func NewServer(c Config) (*Server, error) {
 	if c.Id <= 0 {
 		return nil, errors.New("invalid id")
 	}
-	if c.ConnTimeout <= 0 {
-		c.ConnTimeout = 30 * time.Minute
+	if c.ConnTimeout < 0 {
+		return nil, errors.New("connection timeout must not be negative")
 	}
-	if c.TicketDur <= 0 {
-		c.TicketDur = 20 * time.Second
+	if c.TicketDur < 0 {
+		return nil, errors.New("ticket duration must not be negative")
 	}
 	if c.Location == nil {
 		c.Location = time.UTC
