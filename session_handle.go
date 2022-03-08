@@ -269,7 +269,7 @@ func (s *session) handleAccountAddCharacter(ctx context.Context, m msgcli.Accoun
 		return err
 	}
 
-	if len(accountCharacters) >= 5 {
+	if len(accountCharacters) >= 15 {
 		s.sendMessage(msgsvr.AccountCharacterAddError{Reason: protoenum.AccountCharacterAddErrorReason.CreateCharacterFull})
 		return nil
 	}
