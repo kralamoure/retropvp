@@ -2323,9 +2323,11 @@ func calcBoost(current, add int, boosts []retro.ClassBoostCost) (cost, bonus int
 			amount = (nextQuantity - current) / v.Bonus
 		}
 
+		b := v.Bonus * amount
+		bonus += b
+		add -= b
+
 		cost += v.Cost * amount
-		bonus += v.Bonus * amount
-		add -= v.Bonus * amount
 	}
 
 	return
