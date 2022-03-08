@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"sort"
@@ -1441,77 +1442,46 @@ func (s *session) handleItemsRequestMovement(ctx context.Context, m msgcli.Items
 }
 
 func (s *session) handleAccountBoost(ctx context.Context, m msgcli.AccountBoost) error {
+	if m.Amount < 1 {
+		return errors.New("boost amount must be positive")
+	}
+
 	char, err := s.svr.retro.Character(ctx, s.characterId)
 	if err != nil {
 		return err
 	}
-	fmt.Println(char.Stats)
 
 	class, ok := s.svr.cache.static.classes[char.ClassId]
 	if !ok {
 		return errors.New("class not found")
 	}
 
-	cost := 1
-	bonus := 1
+	var currentQty int
+	var boosts []retro.ClassBoostCost
 	switch m.CharacteristicId {
 	case retrotyp.CharacteristicIdVitality:
-		currentQty := char.Stats.Vitality
-		for _, v := range class.BoostCosts.Vitality {
-			if v.Quantity > currentQty {
-				break
-			}
-			cost = v.Cost
-			bonus = v.Bonus
-		}
+		currentQty = char.Stats.Vitality
+		boosts = class.BoostCosts.Vitality
 	case retrotyp.CharacteristicIdWisdom:
-		currentQty := char.Stats.Wisdom
-		for _, v := range class.BoostCosts.Wisdom {
-			if v.Quantity > currentQty {
-				break
-			}
-			cost = v.Cost
-			bonus = v.Bonus
-		}
+		currentQty = char.Stats.Wisdom
+		boosts = class.BoostCosts.Wisdom
 	case retrotyp.CharacteristicIdStrength:
-		currentQty := char.Stats.Strength
-		for _, v := range class.BoostCosts.Strength {
-			if v.Quantity > currentQty {
-				break
-			}
-			cost = v.Cost
-			bonus = v.Bonus
-		}
+		currentQty = char.Stats.Strength
+		boosts = class.BoostCosts.Strength
 	case retrotyp.CharacteristicIdIntelligence:
-		currentQty := char.Stats.Intelligence
-		for _, v := range class.BoostCosts.Intelligence {
-			if v.Quantity > currentQty {
-				break
-			}
-			cost = v.Cost
-			bonus = v.Bonus
-		}
+		currentQty = char.Stats.Intelligence
+		boosts = class.BoostCosts.Intelligence
 	case retrotyp.CharacteristicIdChance:
-		currentQty := char.Stats.Chance
-		for _, v := range class.BoostCosts.Chance {
-			if v.Quantity > currentQty {
-				break
-			}
-			cost = v.Cost
-			bonus = v.Bonus
-		}
+		currentQty = char.Stats.Chance
+		boosts = class.BoostCosts.Chance
 	case retrotyp.CharacteristicIdAgility:
-		currentQty := char.Stats.Agility
-		for _, v := range class.BoostCosts.Agility {
-			if v.Quantity > currentQty {
-				break
-			}
-			cost = v.Cost
-			bonus = v.Bonus
-		}
+		currentQty = char.Stats.Agility
+		boosts = class.BoostCosts.Agility
 	default:
 		return errors.New("characteristic id is invalid")
 	}
+
+	cost, bonus := calcBoost(currentQty, m.Amount, boosts)
 
 	if char.BonusPoints < cost {
 		return errors.New("bonus points are insufficient")
@@ -2332,4 +2302,31 @@ func (s *session) chatCommand(ctx context.Context, cmd string) error {
 	}
 
 	return nil
+}
+
+func calcBoost(current, add int, boosts []retro.ClassBoostCost) (cost, bonus int) {
+	for i, v := range boosts {
+		if add == 0 {
+			break
+		}
+
+		nextQuantity := math.MaxInt
+		if i+1 < len(boosts) {
+			nextQuantity = boosts[i+1].Quantity
+			if nextQuantity <= current {
+				continue
+			}
+		}
+
+		amount := add / v.Bonus
+		if current+add > nextQuantity {
+			amount = (nextQuantity - current) / v.Bonus
+		}
+
+		cost += v.Cost * amount
+		bonus += v.Bonus * amount
+		add -= v.Bonus * amount
+	}
+
+	return
 }
