@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"math/rand"
 	"net"
 	"sort"
@@ -2302,33 +2301,4 @@ func (s *session) chatCommand(ctx context.Context, cmd string) error {
 	}
 
 	return nil
-}
-
-func calcBoost(current, add int, boosts []retro.ClassBoostCost) (cost, bonus int) {
-	for i, v := range boosts {
-		if add == 0 {
-			break
-		}
-
-		nextQuantity := math.MaxInt
-		if i+1 < len(boosts) {
-			nextQuantity = boosts[i+1].Quantity
-			if nextQuantity <= current {
-				continue
-			}
-		}
-
-		amount := add / v.Bonus
-		if current+add > nextQuantity {
-			amount = (nextQuantity - current) / v.Bonus
-		}
-
-		b := v.Bonus * amount
-		bonus += b
-		add -= b
-
-		cost += v.Cost * amount
-	}
-
-	return
 }
