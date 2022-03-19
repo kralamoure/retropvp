@@ -1,3 +1,5 @@
 /.idea/
 /trace.out
 /cmd/play/
+/go.work
+/go.work.sum
