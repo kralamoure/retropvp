@@ -4,6 +4,10 @@
 
 `retropvp` is an unofficial PVP game server of Dofus Retro.
 
+> [!WARNING]
+> This repository is a WIP, and it's in a very early stage of development. I decided to make the repository public
+> because a user requested that, and also in case anyone else finds it useful in its current state.
+
 ## Build
 
 ```sh
