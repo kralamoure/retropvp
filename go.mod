@@ -1,6 +1,6 @@
 module github.com/kralamoure/retropvp
 
-go 1.18
+go 1.22.4
 
 require (
 	github.com/PaesslerAG/gval v1.1.2
