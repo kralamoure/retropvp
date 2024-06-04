@@ -61,7 +61,7 @@ type sessionCache struct {
 }
 
 type msgOut interface {
-	ProtocolId() (id retroproto.MsgSvrId)
+	MessageId() (id retroproto.MsgSvrId)
 	Serialized() (extra string, err error)
 }
 
@@ -696,13 +696,13 @@ func (s *session) frameMessage(id retroproto.MsgCliId) bool {
 func (s *session) sendMessage(msg msgOut) {
 	pkt, err := msg.Serialized()
 	if err != nil {
-		name, _ := retroproto.MsgSvrNameByID(msg.ProtocolId())
+		name, _ := retroproto.MsgSvrNameByID(msg.MessageId())
 		s.svr.logger.Errorw(fmt.Errorf("could not serialize message: %w", err).Error(),
 			"name", name,
 		)
 		return
 	}
-	s.sendPacket(fmt.Sprint(msg.ProtocolId(), pkt))
+	s.sendPacket(fmt.Sprint(msg.MessageId(), pkt))
 }
 
 func (s *session) sendPacket(pkt string) {
