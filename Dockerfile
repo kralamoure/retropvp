@@ -5,7 +5,7 @@ COPY . .
 
 RUN go install -v ./...
 
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.source="https://github.com/kralamoure/retropvp"
 
